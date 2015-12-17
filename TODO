@@ -1,5 +1,0 @@
-+ Make object create/delete operations atomic (?)
-+ Support requesting multiple permissions per authorization (?)
-   - Potentially needed to support multi-permission ops, e.g. adding a
-     verifier to an object requires both the objects x-perm permission
-     and the read permission for the verifier(s) to be added.

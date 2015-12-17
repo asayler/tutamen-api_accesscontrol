@@ -1,3 +1,0 @@
-[submodule "submodules/pcollections"]
-	path = submodules/pcollections
-	url = git@github.com:asayler/pcollections.git

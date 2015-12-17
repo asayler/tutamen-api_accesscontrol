@@ -17,8 +17,6 @@ from . import exceptions
 from tutamen_server import storage
 import pcollections.be_redis_atomic as dso
 
-#import tutamen_server.storage
-
 
 ### Constants ###
 

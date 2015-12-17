@@ -12,10 +12,8 @@ PYLINT = pylint
 REQUIRMENTS = requirments.txt
 PYLINT_CONF = pylint.rc
 
-API_DIR = "./tutamen_api/"
-SRV_DIR = "./tutamen_server/"
+API_DIR = "./accesscontrol-api/"
 TEST_DIR = "./tests/"
-PCOL_DIR = "./submodules/pcollections"
 
 PYTHONPATH = $(shell readlink -f ./)
 EXPORT_PATH = export PYTHONPATH="$(PYTHONPATH)"
@@ -37,17 +35,12 @@ conf:
 	$(ECHO) "Todo"
 
 lint:
-	$(EXPORT_PATH) && $(PYLINT) --rcfile="$<" $(API_DIR)
-	$(EXPORT_PATH) && $(PYLINT) --rcfile="$<" $(SRV_DIR)
+	$(ECHO) "Todo"
 
 test:
-	$(EXPORT_PATH) && $(PYTHON) $(TEST_DIR)/server_datatypes_tests.py -v
-	$(EXPORT_PATH) && $(PYTHON) $(TEST_DIR)/server_storage_tests.py -v
-	$(EXPORT_PATH) && $(PYTHON) $(TEST_DIR)/server_accesscontrol_tests.py -v
+	$(ECHO) "Todo"
 
 clean:
 	$(RM) *~
 	$(RM) $(API_DIR)/*~
 	$(RM) $(API_DIR)/*.pyc
-	$(RM) $(SRV_DIR)/*~
-	$(RM) $(SRV_DIR)/*.pyc

@@ -1,29 +1,3 @@
-### Storage Server Endpoints ###
-
-<VERB>   <PATH>                                          <Perms>              <Description>
--------------------------------------------------------------------------------------------
-
-GET     /                                                none                 Welcome Message
-
-GET     /collections/                                      srv-collection-read    List Collections
-POST    /collections/                                      srv-collection-create  Create Collection
-GET     /collections/<uid>/                                collection-read        Get Metadata
-PUT     /collections/<uid>/                                collection-modify      Modify Metadata
-DELETE  /collections/<uid>/                                collection-delete      Delete Collection
-GET     /collections/<uid>/secrets/                        collection-read        List Secrets
-POST    /collections/<uid>/secrets/                        collection-create      Create Secret
-GET     /collections/<uid>/secrets/<uid>/                  collection-read        Get Metadata
-PUT     /collections/<uid>/secrets/<uid>/                  collection-modify      Create New Version
-DELETE  /collections/<uid>/secrets/<uid>/                  collection-delete      Delete All Versions
-GET     /collections/<uid>/secrets/<uid>/versions/         collection-read        List Secret Versions
-GET     /collections/<uid>/secrets/<uid>/versions/latest/  collection-read        Get Secret (latest)
-GET     /collections/<uid>/secrets/<uid>/versions/<vid>/   collection-read        Get Secret (vid)
-DELETE  /collections/<uid>/secrets/<uid>/versions/<vid>/   collection-delete      Delete Secret (vid)
-GET     /collections/<uid>/acsrv/                          collection-ac          List Acc. Ctrl. Srv.
-PUT     /collections/<uid>/acsrv/                          collection-ac          Add Acc. Ctrl. Srv.
-DELETE  /collections/<uid>/acsrv/                          collection-ac          Remove Acc. Ctrl. Srv.
-
-
 ### Access Control Server Endpoints ###
 
 <VERB>   <PATH>                                       <Perms>              <Description>
@@ -119,14 +93,8 @@ POST     /bootstrap/account/                          srv-account-request    Boo
 
 ---------------------------------------------------------------------------------------
 
+
 ### Data Types ###
-
-Type (ID):
-    KEY                     VAL           TYPE             R/W
-
-Secret (UUID):
-    data                    <secret>      string           R
-    collection              <uid>         UUID
 
 Authorization:
     permission
@@ -135,22 +103,6 @@ Authorization:
     token
     expiration
 
-
-### Storage Permissions ###
-
-<obj>:
-    <perm>
-
-server:
-    collection-read
-    collection-create
-
-collection:
-    read
-    modify
-    create
-    delete
-    perms
 
 ### AC Permissions ###
 
