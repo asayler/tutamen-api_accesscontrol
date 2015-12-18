@@ -19,10 +19,12 @@ POST    /verifiers/                                   srv-verifier-create  Creat
 GET     /verifiers/<uid>/                             verifier-read        Get Metadata
 PUT     /verifiers/<uid>/                             verifier-modify      Modify Metadata
 GET     /verifiers/<uid>/inuseby/                     verifier-read        List Assc. Objs/Perms
-GET     /verifiers/<uid>/group/                       verifier-read        Get Associated Group
-PUT     /verifiers/<uid>/group/                       verifier-modify      Modify Associated Group
-GET     /verifiers/<uid>/authset/                     verifier-read        Get Associated Authset
-PUT     /verifiers/<uid>/authset/                     verifier-modify      Modify Associated Authset
+GET     /verifiers/<uid>/accounts/                    verifier-read        List Allowed Accounts
+PUT     /verifiers/<uid>/accounts/                    verifier-modify      Add Allowed Accounts
+DELETE  /verifiers/<uid>/accounts/                    verifier-delete      Remove Allowed Accounts
+GET     /verifiers/<uid>/authenticators/              verifier-read        List Required Authenticators
+PUT     /verifiers/<uid>/authenticators/              verifier-modify      Add Required Authenticators
+DELETE  /verifiers/<uid>/authenticators/              verifier-delete      Remove Required Authenticators
 GET     /verifiers/<uid>/verifiers/<pid>/             verifier-perms       List Perm. Verifiers
 PUT     /verifiers/<uid>/verifiers/<pid>/             verifier-perms       Add Perm. Verifiers
 DELETE  /verifiers/<uid>/verifiers/<pid>/             verifier-perms       Remove Perm. Verifiers
@@ -33,48 +35,25 @@ DELETE  /permissions/<object>/<uid>/<perm>/           <obj>-perms          Remov
 
 ---------------------------------------------------------------------------------------
 
-GET     /authsets/                                    srv-authset-read    List Authsets
-POST    /authsets/                                    srv-authset-create  Create Authset
-GET     /authsets/<uid>/                              authset-read        Get Authset
-PUT     /authsets/<uid>/                              authset-modify      Modify Authset
-DELETE  /authsets/<uid>/                              authset-delete      Delete Authset
-GET     /authsets/<uid>/inuseby/                      authset-read        List Assc. Verifiers
-GET     /authsets/<uid>/authenticators/               authset-read        List Members
-PUT     /authsets/<uid>/authenticators/               authset-modify      Add Members
-DELETE  /authsets/<uid>/authenticators/               authset-modify      Remove Members
-GET     /authsets/<uid>/verifiers/<pid>/              authset-perms       List Perm. Verifiers
-PUT     /authsets/<uid>/verifiers/<pid>/              authset-perms       Add Perm. Verifiers
-DELETE  /authsets/<uid>/verifiers/<pid>/              authset-perms       Remove Perm. Verifiers
-
 GET     /authenticators/                              srv-authenticator-read    List Authenticators
 POST    /authenticators/                              srv-authenticator-create  Create Authenticator
 GET     /authenticators/<uid>/                        authenticator-read        Get Authenticator
 PUT     /authenticators/<uid>/                        authenticator-modify      Modify Authenticator
 DELETE  /authenticators/<uid>/                        authenticator-delete      Delete Authenticator
 GET     /authenticators/<uid>/module/                 authenticator-read        Get Authmod
-GET     /authenticators/<uid>/authsets/               authenticator-modify      List Authsets
+GET     /authenticators/<uid>/verifiers/              authenticator-read        List Associated Verifiers
 GET     /authenticators/<uid>/verifiers/<pid>/        authenticator-perms       List Perm. Verifiers
 PUT     /authenticators/<uid>/verifiers/<pid>/        authenticator-perms       Add Perm. Verifiers
 DELETE  /authenticators/<uid>/verifiers/<pid>/        authenticator-perms       Remove Perm. Verifiers
 
 ---------------------------------------------------------------------------------------
 
-GET     /groups/                                      srv-group-read         List Groups
-POST    /groups/                                      srv-group-create       Create Group
-GET     /groups/<uid>/                                group-read             Get Group
-PUT     /groups/<uid>/                                group-modify           Modify Group
-DELETE  /groups/<uid>/                                group-delete           Delete Group
-GET     /groups/<uid>/inuseby/                        group-read             List Assc. Verifiers
-GET     /groups/<uid>/accounts/                       group-read             List Members
-PUT     /groups/<uid>/accounts/                       group-modify           Add Members
-DELETE  /groups/<uid>/accounts/                       group-modify           Remove Members
-
 GET     /accounts/                                    srv-account-read       List Accounts
 POST    /accounts/                                    srv-account-create     Create Account
 GET     /accounts/<uid>/                              account-read           Get Account
 PUT     /accounts/<uid>/                              account-modify         Modify Account
 DELETE  /accounts/<uid>/                              account-delete         Delete Account
-GET     /accounts/<uid>/groups/                       account-read           List Groups
+GET     /accounts/<uid>/verfiers/                     account-read           List Associated Verifiers
 GET     /accounts/<uid>/clients/                      account-read           List Clients
 POST    /accounts/<uid>/clients/                      account-create         Create Client
 GET     /accounts/<uid>/clients/pending/              account-read           List Pending Clients
@@ -112,8 +91,6 @@ Authorization:
 server:
     verifier-create
     verifier-read
-    group-create
-    group-read
     account-create
     account-read
     account-request
@@ -126,19 +103,7 @@ verifier:
     delete
     perms
 
-authset:
-    read
-    modify
-    delete
-    perms
-
 authenticator:
-    read
-    modify
-    delete
-    perms
-
-group:
     read
     modify
     delete
@@ -154,6 +119,4 @@ account:
 ### Access Control Schema ###
 
 permission: [verfiers] (OR)
-verifer: (group, authset)
-group: [account] (OR)
-authset: [authenticator] (AND)
+verifer: ([account] (OR), [authenticator] (AND))
