@@ -29,7 +29,6 @@ git:
 
 reqs:
 	$(PIP) install -r $(REQUIRMENTS) -U
-	$(MAKE) -C $(PCOL_DIR) reqs3
 
 conf:
 	$(ECHO) "Todo"
