@@ -5,6 +5,8 @@ ECHO = @echo
 
 GIT = git
 
+APT = apt-get
+
 PYTHON = python3
 PIP = pip3
 PYLINT = pylint
@@ -30,7 +32,8 @@ git:
 	$(GIT) submodule update
 
 reqs:
-	$(PIP) install -r $(REQUIRMENTS) -
+	$(PIP) install -r $(REQUIRMENTS) -U
+	$(APT) install libffi-dev libssl-dev
 	$(MAKE) -C $(TUTSRV_DIR) reqs
 
 conf:
