@@ -12,7 +12,7 @@ PYLINT = pylint
 REQUIRMENTS = requirments.txt
 PYLINT_CONF = pylint.rc
 
-API_DIR = "./accesscontrol-api/"
+API_DIR = "./api_accesscontrol/"
 TEST_DIR = "./tests/"
 
 PYTHONPATH = $(shell readlink -f ./)
@@ -30,7 +30,7 @@ git:
 	$(GIT) submodule update
 
 reqs:
-	$(PIP) install -r $(REQUIRMENTS) -U
+	$(PIP) install -r $(REQUIRMENTS) -
 	$(MAKE) -C $(TUTSRV_DIR) reqs
 
 conf:
