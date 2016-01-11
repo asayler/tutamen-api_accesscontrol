@@ -47,3 +47,4 @@ clean:
 	$(RM)    $(API_DIR)/*~
 	$(RM)    $(API_DIR)/*.pyc
 	$(RM) -r $(API_DIR)/__pycache__
+	$(MAKE) -C $(TUTSRV_DIR) clean
