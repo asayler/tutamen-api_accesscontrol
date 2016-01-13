@@ -68,8 +68,8 @@ DELETE  /accounts/<uid>/clients/<uid>/                account-delete         Del
 
 ---------------------------------------------------------------------------------------
 
-POST     /bootstrap/client/                           none                   Bootstrap Client
-POST     /bootstrap/account/                          none                   Bootstrap Account
+POST     /bootstrap/clients/                          none                   Bootstrap Client
+POST     /bootstrap/accounts/                         none                   Bootstrap Account
 
 ---------------------------------------------------------------------------------------
 
