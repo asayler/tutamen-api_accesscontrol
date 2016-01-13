@@ -6,25 +6,45 @@
 
 
 ### Imports ###
+
 import functools
 import uuid
+import datetime
 
 import flask
 import flask.ext.httpauth
 import flask.ext.cors
 
+from pcollections import drivers
+from pcollections import backends
+
+from pytutamen_server import accesscontrol
+
 from . import exceptions
-from tutamen_server import storage
-import pcollections.be_redis_atomic as dso
+from . import config
 
 
 ### Constants ###
 
+DUR_ONE_MINUTE = datetime.timedelta(minutes=1)
+DUR_ONE_HOUR = datetime.timedelta(hours=1)
+DUR_ONE_DAY = datetime.timedelta(days=1)
+DUR_ONE_MONTH = datetime.timedelta(days=28)
+DUR_ONE_YEAR = datetime.timedelta(days=366)
+DUR_TEN_YEAR = datetime.timedelta(days=3660)
+
 _REDIS_DB = 3
 
+_EP_PUB = "public"
+_EP_BOOTSTRAP = "bootstrap"
+
+_KEY_CACERT = "cacert"
+_KEY_SIGKEY = "sigkey"
+
+_KEY_ACCOUNTS = "accounts"
+_KEY_CLIENTS = "clients"
+
 _KEY_AUTHORIZATIONS = "authorizations"
-_KEY_COLLECTIONS = "collections"
-_KEY_SECRETS = "secrets"
 
 
 ### Global Setup ###
@@ -74,9 +94,10 @@ if not app.testing:
 
 @app.before_request
 def before_request():
-    driver = dso.Driver(db=_REDIS_DB)
-    ss = storage.StorageServer(driver)
-    flask.g.srv_storage = ss
+
+    flask.g.pdriver = drivers.RedisDriver(db=_REDIS_DB)
+    flask.g.pbackend = backends.RedisAtomicBackend(pdriver)
+    flask.g.srv_ac = accesscontrol.AccessControlServer(flask.g.pbackend, create=False)
 
 @app.teardown_request
 def teardown_request(exception):
@@ -100,7 +121,7 @@ def authenticate_client():
                 raise exceptions.SSLClientCertError(msg)
 
             account_id = cert_info['SSL_CLIENT_S_DN_O']
-            client_id = cert_info['SSL_CLIENT_S_DN_CN']
+            client_id = uuid.UUID(cert_info['SSL_CLIENT_S_DN_CN'])
             msg = "Authenticated Client '{}' for Account '{}'".format(client_id, account_id)
             app.logger.debug(msg)
             flask.g.account_id = account_id
@@ -116,7 +137,8 @@ def authenticate_client():
 @httpauth.verify_password
 def verify_login(username, password):
 
-    # Note: Token limited to 255 chars
+    # Note: Token limited to header length
+    # Note: How to handle multiple tokens per request?
     token = username
     app.logger.debug("verify_token: token={}".format(token))
 
@@ -134,101 +156,101 @@ def get_root():
     app.logger.debug("GET ROOT")
     return app.send_static_file('index.html')
 
-## Authroization Endpoints ##
+
+## Public Endpoints ##
+
+@app.route("/{}/{}/".format(_EP_PUBLIC, _KEY_CACERT), methods=['GET'])
+def get_pub_cacert():
+
+    app.logger.debug("GET PUB CACERT")
+    json_out = {_KEY_CACERT: [falsk.g.srv_ac.ca_crt]}
+    return flask.jsonify(json_out)
+
+
+## Bootstrap Endpoints ##
+
+@app.route("/{}/{}/".format(_EP_BOOTSTRAP, _KEY_ACCOUNTS), methods=['POST'])
+def bootstrap_account_create():
+
+    app.logger.debug("BOOTSTRAP ACCOUNT")
+
+    json_in = flask.request.get_json(force=True)
+    app.logger.debug("json_in = '{}'".format(json_in))
+
+    if config.BOOTSTRAP_PASSWORD:
+        password = json_in.get('password', "")
+        if password != config.BOOTSTRAP_PASSWORD:
+            flask.abort(401)
+
+    account_userdata = json_in.get('account_userdata', {})
+    app.logger.debug("account_userdata = '{}'".format(client_userdata))
+    account_uid = json_in.get('account_uid', None)
+    app.logger.debug("accuid = '{}'".format(account_uid))
+
+    client_serdata = json_in.get('client_userdata', {})
+    app.logger.debug("client_userdata = '{}'".format(client_userdata))
+    client_uid = json_in.get('client_uid', None)
+    app.logger.debug("client_uid = '{}'".format(client_uid))
+    client_csr = json_in['client_csr']
+    app.logger.debug("client_csr = '{}'".format(client_csr))
+
+    account = flask.g.srv_ac.accounts.create(userdata=account_userdata,
+                                             key=account_uid)
+    app.logger.debug("account = '{}'".format(account))
+
+    client = account.clients.create(userdata=client_userdata,
+                                    key=client_uid,
+                                    csr_pem=client_csr)
+    app.logger.debug("client = '{}'".format(client))
+
+    json_out = {_KEY_ACCOUNTS: [account.key],
+                _KEY_CLIENTS: [client.key]}
+    return flask.jsonify(json_out)
+
+
+## Authorization Endpoints ##
 
 @app.route("/{}/".format(_KEY_AUTHORIZATIONS), methods=['POST'])
 @authenticate_client()
-def post_authorizations():
+def create_authorizations():
 
     app.logger.debug("POST AUTHORIZATIONS")
     json_in = flask.request.get_json(force=True)
     app.logger.debug("json_in = '{}'".format(json_in))
-    permission = json_in['permission']
-    app.logger.debug("permission = '{}'".format(permission))
-    usermetadata = json_in['usermetadata']
-    app.logger.debug("usermetadata = '{}'".format(usermetadata))
-    # ath =
-    # app.logger.debug("ath = '{}'".format(ath))
-    json_out = {_KEY_AUTHORIZATIONS: [str(uuid.uuid4())]}
+
+    userdata = json_in['userdata']
+    app.logger.debug("userdata = '{}'".format(userdata))
+
+    objperm = json_in['objperm']
+    app.logger.debug("objperm = '{}'".format(objperm))
+    objtype = json_in['objtype']
+    app.logger.debug("objtype = '{}'".format(objtype))
+    objuid = uuid.UUID(json_in['objuid'])
+    app.logger.debug("objuid = '{}'".format(objuid))
+
+    expiration = datetime.datetime.utcnow() + DUR_ONE_HOUR
+
+    ath = flask.g.srv_ac.authorizations.create(userdata=userdata,
+                                               clientuid=flask.g.client_id,
+                                               expiration=expiration,
+                                               objperm=objperm,
+                                               objtype=objtype,
+                                               objuid=objuid)
+    app.logger.debug("ath = '{}'".format(ath))
+
+    json_out = {_KEY_AUTHORIZATIONS: [ath.key]}
     return flask.jsonify(json_out)
 
-@app.route("/{}/<auth_uid>/status/".format(_KEY_AUTHORIZATIONS), methods=['GET'])
+@app.route("/{}/<auth_uid>/".format(_KEY_AUTHORIZATIONS), methods=['GET'])
 @authenticate_client()
-def get_authorizations_status(auth_uid):
+def get_authorizations(auth_uid):
 
-    app.logger.debug("GET AUTHORIZATIONS STATUS")
-    # ath =
-    # app.logger.debug("ath = '{}'".format(ath))
+    app.logger.debug("GET AUTHORIZATIONS")
+    ath = flask.g.srv_ac.authorizations.get(key=auth_uid)
+    app.logger.debug("ath = '{}'".format(ath))
     status = "granted"
     json_out = {'status': status}
     return flask.jsonify(json_out)
-
-@app.route("/{}/<auth_uid>/token/".format(_KEY_AUTHORIZATIONS), methods=['GET'])
-@authenticate_client()
-def get_authorizations_token(auth_uid):
-
-    app.logger.debug("GET AUTHORIZATIONS TOKEN")
-    # ath =
-    # app.logger.debug("ath = '{}'".format(ath))
-    token = "1128e2ad63a0309c9f1788780c5b5e237310d62acc120ad75167e08d9671da43"
-    json_out = {'token': token}
-    return flask.jsonify(json_out)
-
-
-## Storage Endpoints ##
-
-@app.route("/{}/".format(_KEY_COLLECTIONS), methods=['POST'])
-@authenticate_client()
-@httpauth.login_required
-def post_collections():
-
-    app.logger.debug("POST COLLECTIONS")
-
-    json_in = flask.request.get_json(force=True)
-    app.logger.debug("json_in = '{}'".format(json_in))
-    usermetadata = json_in.get('usermetadata', {})
-    app.logger.debug("usermetadata = '{}'".format(usermetadata))
-
-    col = ss.collections_create(usermetadata=usermetadata)
-    app.logger.debug("col.key = '{}'".format(col.key))
-    json_out = {_KEY_COLLECTIONS: [col.key]}
-    return flask.jsonify(json_out)
-
-@app.route("/{}/<col_uid>/{}/".format(_KEY_COLLECTIONS, _KEY_SECRETS), methods=['POST'])
-@authenticate_client()
-@httpauth.login_required
-def post_collections_secrets(col_uid):
-
-    app.logger.debug("POST COLLECTIONS SECRETS")
-    col = ss.collections_get(key=col_uid)
-
-    json_in = flask.request.get_json(force=True)
-    app.logger.debug("json_in = '{}'".format(json_in))
-    data = json_in.get('data', "")
-    app.logger.debug("data = '{}'".format(data))
-    usermetadata = json_in.get('metadata', {})
-    app.logger.debug("usermetadata = '{}'".format(usermetadata))
-
-    sec = col.secrets_create(data=data, usermetadata=usermetadata)
-    app.logger.debug("sec.key = '{}'".format(sec.key))
-    json_out = {_KEY_SECRETS: [sec.key]}
-    return flask.jsonify(json_out)
-
-@app.route("/{}/<col_uid>/{}/<sec_uid>/versions/latest/".format(_KEY_COLLECTIONS, _KEY_SECRETS),
-           methods=['GET'])
-@authenticate_client()
-@httpauth.login_required
-def get_collections_secret_versions_latest(col_uid, sec_uid):
-
-    app.logger.debug("GET COLLECTIONS SECRET VERSIONS LATEST")
-    col = ss.collections_get(key=col_uid)
-    app.logger.debug("col.key = '{}'".format(col.key))
-    sec = col.secrets_get(key=sec_uid)
-    app.logger.debug("sec.key = '{}'".format(sec.key))
-
-    json_out = {'data': sec.data, 'usermetadata': sec.usermetadata}
-    return flask.jsonify(json_out)
-
 
 ### Error Handling ###
 
