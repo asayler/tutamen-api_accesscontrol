@@ -4,7 +4,8 @@
 -------------------------------------------------------------------------------------------
 
 GET     /                                             none                 Welcome Message
-GET     /pubkey/                                      none                 Get public signing key
+GET     /public/cacert/                               none                 Get CA Cert
+GET     /public/sigkey/                               none                 Get Public Signing Key
 
 POST    /authorizations/                              none                 Request Authorization
 GET     /authorizations/<uid>/                        none                 Get Authorization
@@ -67,8 +68,8 @@ DELETE  /accounts/<uid>/clients/<uid>/                account-delete         Del
 
 ---------------------------------------------------------------------------------------
 
-POST     /bootstrap/client/                           srv-client-request     Bootstrap Client
-POST     /bootstrap/account/                          srv-account-request    Bootstrap Account
+POST     /bootstrap/client/                           none                   Bootstrap Client
+POST     /bootstrap/account/                          none                   Bootstrap Account
 
 ---------------------------------------------------------------------------------------
 
