@@ -33,9 +33,7 @@ DUR_ONE_MONTH = datetime.timedelta(days=28)
 DUR_ONE_YEAR = datetime.timedelta(days=366)
 DUR_TEN_YEAR = datetime.timedelta(days=3660)
 
-_REDIS_DB = 3
-
-_EP_PUB = "public"
+_EP_PUBLIC = "public"
 _EP_BOOTSTRAP = "bootstrap"
 
 _KEY_CACERT = "cacert"
@@ -95,8 +93,8 @@ if not app.testing:
 @app.before_request
 def before_request():
 
-    flask.g.pdriver = drivers.RedisDriver(db=_REDIS_DB)
-    flask.g.pbackend = backends.RedisAtomicBackend(pdriver)
+    flask.g.pdriver = drivers.RedisDriver(db=config.REDIS_DB)
+    flask.g.pbackend = backends.RedisAtomicBackend(flask.g.pdriver)
     flask.g.srv_ac = accesscontrol.AccessControlServer(flask.g.pbackend, create=False)
 
 @app.teardown_request

@@ -1,1 +1,1 @@
-from accesscontrol_api.api import app as application
+from api_accesscontrol.api import app as application
