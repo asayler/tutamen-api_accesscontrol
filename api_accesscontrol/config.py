@@ -17,6 +17,8 @@ SEC_REDIS = "redis"
 config.add_section(SEC_REDIS)
 SEC_LOGGING = "logging"
 config.add_section(SEC_LOGGING)
+SEC_CA = "ca"
+config.add_section(SEC_CA)
 SEC_BOOTSTRAP = "bootstrap"
 config.add_section(SEC_BOOTSTRAP)
 
@@ -41,9 +43,16 @@ config.set(SEC_REDIS, 'PORT', "6379")
 config.set(SEC_REDIS, 'DB', "4")
 config.set(SEC_REDIS, 'PASSWORD', None)
 
-
 config.set(SEC_LOGGING, 'ENABLED', "True")
 config.set(SEC_LOGGING, 'PATH', LOG_PATH)
+
+config.set(SEC_CA, 'CN', "Tutamen AC Server CA")
+config.set(SEC_CA, 'COUNTRY', "US")
+config.set(SEC_CA, 'STATE', "Colorado")
+config.set(SEC_CA, 'LOCALITY', "BOULDER")
+config.set(SEC_CA, 'ORGANIZATION', "Tutamen AC Server")
+config.set(SEC_CA, 'OU', "CA")
+config.set(SEC_CA, 'EMAIL', "admin@tutamen.net")
 
 config.set(SEC_BOOTSTRAP, 'PASSWORD', None)
 
@@ -71,6 +80,21 @@ LOGGING_ENABLED = LOGGING_ENABLED.lower() in ['true', 'yes', 'on', '1']
 LOGGING_PATH = os.environ.get('TUTAMEN_API_AC_LOGGING_PATH',
                               config.get(SEC_LOGGING, 'PATH'))
 LOGGING_PATH = os.path.realpath(LOGGING_PATH)
+
+CA_CN = os.environ.get('TUTAMEN_API_AC_CA_CN',
+                       config.get(SEC_CA, 'CN'))
+CA_COUNTRY = os.environ.get('TUTAMEN_API_AC_CA_COUNTRY',
+                            config.get(SEC_CA, 'COUNTRY'))
+CA_STATE = os.environ.get('TUTAMEN_API_AC_CA_STATE',
+                          config.get(SEC_CA, 'STATE'))
+CA_LOCALITY = os.environ.get('TUTAMEN_API_AC_CA_LOCALITY',
+                             config.get(SEC_CA, 'LOCALITY'))
+CA_ORGANIZATION = os.environ.get('TUTAMEN_API_AC_CA_ORGANIZATION',
+                                 config.get(SEC_CA, 'ORGANIZATION'))
+CA_OU = os.environ.get('TUTAMEN_API_AC_CA_OU',
+                       config.get(SEC_CA, 'OU'))
+CA_EMAIL = os.environ.get('TUTAMEN_API_AC_CA_EMAIL',
+                       config.get(SEC_CA, 'EMAIL'))
 
 BOOTSTRAP_PASSWORD = os.environ.get('TUTAMEN_API_AC_BOOTSTRAP_PASSWORD',
                                     config.get(SEC_BOOTSTRAP, 'PASSWORD'))
