@@ -4,11 +4,11 @@
 # Copyright 2015
 
 
-import ConfigParser
+import configparser
 import os
 
 
-config = ConfigParser.SafeConfigParser(allow_no_value=True)
+config = configparser.SafeConfigParser(allow_no_value=True)
 
 
 # Sections
