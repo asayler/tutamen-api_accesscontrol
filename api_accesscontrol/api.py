@@ -181,11 +181,11 @@ def bootstrap_account_create():
             flask.abort(401)
 
     account_userdata = json_in.get('account_userdata', {})
-    app.logger.debug("account_userdata = '{}'".format(client_userdata))
+    app.logger.debug("account_userdata = '{}'".format(account_userdata))
     account_uid = json_in.get('account_uid', None)
     app.logger.debug("accuid = '{}'".format(account_uid))
 
-    client_serdata = json_in.get('client_userdata', {})
+    client_userdata = json_in.get('client_userdata', {})
     app.logger.debug("client_userdata = '{}'".format(client_userdata))
     client_uid = json_in.get('client_uid', None)
     app.logger.debug("client_uid = '{}'".format(client_uid))
