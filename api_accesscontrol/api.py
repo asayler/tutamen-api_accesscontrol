@@ -18,6 +18,7 @@ import flask.ext.cors
 from pcollections import drivers
 from pcollections import backends
 
+from pytutamen_server import datatypes
 from pytutamen_server import accesscontrol
 
 from . import exceptions
@@ -251,6 +252,15 @@ def get_authorizations(auth_uid):
     return flask.jsonify(json_out)
 
 ### Error Handling ###
+
+@app.errorhandler(datatypes.ObjectExists)
+def object_exists(error):
+    err = { 'status': 409,
+            'message': "{}".format(error) }
+    app.logger.info("Client Error: ObjectExists: {}".format(err))
+    res = flask.jsonify(err)
+    res.status_code = err['status']
+    return res
 
 @app.errorhandler(KeyError)
 def bad_key(error):
