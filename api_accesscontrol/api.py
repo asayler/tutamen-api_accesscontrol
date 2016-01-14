@@ -62,7 +62,7 @@ if not app.testing:
     import logging
     import logging.handlers
 
-    loggers = [app.logger, logging.getLogger('tutamen')]
+    loggers = [app.logger, logging.getLogger('pytutamen_server')]
 
     formatter_line = logging.Formatter('%(levelname)s: %(module)s - %(message)s')
     formatter_line_time = logging.Formatter('%(asctime)s %(levelname)s: %(module)s - %(message)s')
