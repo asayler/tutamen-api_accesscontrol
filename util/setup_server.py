@@ -39,4 +39,4 @@ if __name__ == "__main__":
     # Save Cert
     ca_crt_path = config.CA_CERT_PATH
     with open(ca_crt_path, 'w') as f:
-        f.write(srv_ac.ca_cert)
+        f.write(srv_ac.ca_crt)

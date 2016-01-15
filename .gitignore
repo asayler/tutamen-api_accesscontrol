@@ -3,3 +3,6 @@
 
 # Python Cruft
 *.pyc
+
+# Config Cruft
+ca.crt
