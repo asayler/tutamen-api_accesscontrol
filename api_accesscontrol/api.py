@@ -42,6 +42,7 @@ _KEY_SIGKEY = "sigkey"
 
 _KEY_ACCOUNTS = "accounts"
 _KEY_CLIENTS = "clients"
+_KEY_CLIENTS_CERTS = "{}_certs".format(_KEY_CLIENTS)
 
 _KEY_AUTHORIZATIONS = "authorizations"
 
@@ -203,7 +204,8 @@ def bootstrap_account_create():
     app.logger.debug("client = '{}'".format(client))
 
     json_out = {_KEY_ACCOUNTS: [account.key],
-                _KEY_CLIENTS: [client.key]}
+                _KEY_CLIENTS: [client.key],
+                _KEY_CLIENTS_CERTS: {client.key: client.crt}}
     return flask.jsonify(json_out)
 
 
