@@ -53,6 +53,7 @@ config.set(SEC_CA, 'LOCALITY', "BOULDER")
 config.set(SEC_CA, 'ORGANIZATION', "Tutamen AC Server")
 config.set(SEC_CA, 'OU', "CA")
 config.set(SEC_CA, 'EMAIL', "admin@tutamen.net")
+config.set(SEC_CA, 'CERT_PATH', os.path.join(PROJ_DIR, "ca.crt"))
 
 config.set(SEC_BOOTSTRAP, 'PASSWORD', None)
 
@@ -95,6 +96,8 @@ CA_OU = os.environ.get('TUTAMEN_API_AC_CA_OU',
                        config.get(SEC_CA, 'OU'))
 CA_EMAIL = os.environ.get('TUTAMEN_API_AC_CA_EMAIL',
                        config.get(SEC_CA, 'EMAIL'))
+CA_CERT_PATH = os.environ.get('TUTAMEN_API_AC_CA_CERT_PATH',
+                              config.get(SEC_CA, 'CERT_PATH'))
 
 BOOTSTRAP_PASSWORD = os.environ.get('TUTAMEN_API_AC_BOOTSTRAP_PASSWORD',
                                     config.get(SEC_BOOTSTRAP, 'PASSWORD'))

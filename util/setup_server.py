@@ -17,10 +17,15 @@ from pytutamen_server import accesscontrol
 from api_accesscontrol import config
 
 
+### Main ###
+
 if __name__ == "__main__":
 
+    # Setup Backend
     pdriver = drivers.RedisDriver(db=config.REDIS_DB)
     pbackend = backends.RedisAtomicBackend(pdriver)
+
+    # Setup Server
     srv_ac = accesscontrol.AccessControlServer(pbackend,
                                                create=True,
                                                cn=config.CA_CN,
@@ -30,3 +35,8 @@ if __name__ == "__main__":
                                                organization=config.CA_ORGANIZATION,
                                                ou=config.CA_OU,
                                                email=config.CA_EMAIL)
+
+    # Save Cert
+    ca_crt_path = config.CA_CERT_PATH
+    with open(ca_crt_path, 'w') as f:
+        f.write(srv_ac.ca_cert)
