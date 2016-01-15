@@ -162,7 +162,7 @@ def get_root():
 def get_pub_cacert():
 
     app.logger.debug("GET PUB CACERT")
-    json_out = {_KEY_CACERT: [falsk.g.srv_ac.ca_crt]}
+    json_out = {_KEY_CACERT: [flask.g.srv_ac.ca_crt]}
     return flask.jsonify(json_out)
 
 
@@ -250,6 +250,7 @@ def get_authorizations(auth_uid):
     status = "granted"
     json_out = {'status': status}
     return flask.jsonify(json_out)
+
 
 ### Error Handling ###
 
