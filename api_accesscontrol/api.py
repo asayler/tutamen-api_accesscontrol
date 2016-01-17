@@ -166,6 +166,13 @@ def get_pub_cacert():
     json_out = {_KEY_CACERT: [flask.g.srv_ac.ca_crt]}
     return flask.jsonify(json_out)
 
+@app.route("/{}/{}/".format(_EP_PUBLIC, _KEY_SIGKEY), methods=['GET'])
+def get_pub_sigkey():
+
+    app.logger.debug("GET PUB SIGKEY")
+    json_out = {_KEY_SIGKEY: [flask.g.srv_ac.sigkey_pub]}
+    return flask.jsonify(json_out)
+
 
 ## Bootstrap Endpoints ##
 
@@ -231,28 +238,41 @@ def create_authorizations():
 
     expiration = datetime.datetime.utcnow() + DUR_ONE_HOUR
 
-    ath = flask.g.srv_ac.authorizations.create(userdata=userdata,
-                                               clientuid=flask.g.client_id,
-                                               expiration=expiration,
-                                               objperm=objperm,
-                                               objtype=objtype,
-                                               objuid=objuid)
-    app.logger.debug("ath = '{}'".format(ath))
+    authz = flask.g.srv_ac.authorizations.create(userdata=userdata,
+                                                 clientuid=flask.g.client_id,
+                                                 expiration=expiration,
+                                                 objperm=objperm,
+                                                 objtype=objtype,
+                                                 objuid=objuid)
+    app.logger.debug("authz = '{}'".format(authz))
 
-    json_out = {_KEY_AUTHORIZATIONS: [ath.key]}
+    # Todo: make this asynchronous via seperate verification daemon
+    authz.verify()
+
+    json_out = {_KEY_AUTHORIZATIONS: [authz.key]}
     return flask.jsonify(json_out)
 
-@app.route("/{}/<auth_uid>/".format(_KEY_AUTHORIZATIONS), methods=['GET'])
+@app.route("/{}/<authz_uid>/".format(_KEY_AUTHORIZATIONS), methods=['GET'])
 @authenticate_client()
-def get_authorizations(auth_uid):
+def get_authorizations(authz_uid):
 
     app.logger.debug("GET AUTHORIZATIONS")
-    auth = flask.g.srv_ac.authorizations.get(key=auth_uid)
-    app.logger.debug("auth = '{}'".format(auth))
-    json_out = {'status': auth.status,
-                'objperm': auth.objperm,
-                'objtype': auth.objtype,
-                'objuid': auth.objuid}
+    authz = flask.g.srv_ac.authorizations.get(key=authz_uid)
+    app.logger.debug("authz = '{}'".format(authz))
+
+    # Todo: verify request came from same client
+
+    json_out = {'status': authz.status,
+                'expiration': authz.expiration_timestamp,
+                'objperm': authz.objperm,
+                'objtype': authz.objtype,
+                'objuid': authz.objuid}
+
+    if authz.status == accesscontrol.AUTHZ_STATUS_APPROVED:
+        json_out['token': authz.export_token()]
+    else:
+        json_out['token': ""]
+
     return flask.jsonify(json_out)
 
 
