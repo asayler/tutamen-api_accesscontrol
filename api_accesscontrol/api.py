@@ -266,12 +266,12 @@ def get_authorizations(authz_uid):
                 'expiration': authz.expiration_timestamp,
                 'objperm': authz.objperm,
                 'objtype': authz.objtype,
-                'objuid': authz.objuid}
+                'objuid': str(authz.objuid)}
 
     if authz.status == accesscontrol.AUTHZ_STATUS_APPROVED:
-        json_out['token': authz.export_token()]
+        json_out['token'] = authz.export_token()
     else:
-        json_out['token': ""]
+        json_out['token'] = ""
 
     return flask.jsonify(json_out)
 
@@ -287,32 +287,41 @@ def object_exists(error):
     res.status_code = err['status']
     return res
 
-@app.errorhandler(KeyError)
-def bad_key(error):
-    err = { 'status': 400,
+@app.errorhandler(datatypes.ObjectDNE)
+def object_exists(error):
+    err = { 'status': 404,
             'message': "{}".format(error) }
-    app.logger.info("Client Error: KeyError: {}".format(err))
+    app.logger.info("Client Error: Object Does Not Exist: {}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
 
-@app.errorhandler(ValueError)
-def bad_value(error):
-    err = { 'status': 400,
-            'message': "{}".format(error) }
-    app.logger.info("Client Error: ValueError: {}".format(err))
-    res = flask.jsonify(err)
-    res.status_code = err['status']
-    return res
+# @app.errorhandler(KeyError)
+# def bad_key(error):
+#     err = { 'status': 400,
+#             'message': "{}".format(error) }
+#     app.logger.info("Client Error: KeyError: {}".format(err))
+#     res = flask.jsonify(err)
+#     res.status_code = err['status']
+#     return res
 
-@app.errorhandler(TypeError)
-def bad_type(error):
-    err = { 'status': 400,
-            'message': "{}".format(error) }
-    app.logger.info("Client Error: TypeError: {}".format(err))
-    res = flask.jsonify(err)
-    res.status_code = err['status']
-    return res
+# @app.errorhandler(ValueError)
+# def bad_value(error):
+#     err = { 'status': 400,
+#             'message': "{}".format(error) }
+#     app.logger.info("Client Error: ValueError: {}".format(err))
+#     res = flask.jsonify(err)
+#     res.status_code = err['status']
+#     return res
+
+# @app.errorhandler(TypeError)
+# def bad_type(error):
+#     err = { 'status': 400,
+#             'message': "{}".format(error) }
+#     app.logger.info("Client Error: TypeError: {}".format(err))
+#     res = flask.jsonify(err)
+#     res.status_code = err['status']
+#     return res
 
 @app.errorhandler(exceptions.SSLClientCertError)
 def bad_cert(error):
