@@ -233,7 +233,8 @@ def create_authorizations():
     app.logger.debug("objperm = '{}'".format(objperm))
     objtype = json_in['objtype']
     app.logger.debug("objtype = '{}'".format(objtype))
-    objuid = uuid.UUID(json_in['objuid'])
+    objuid = json_in.get('objuid', None)
+    objuid = uuid.UUID(objuid) if objuid else None
     app.logger.debug("objuid = '{}'".format(objuid))
 
     expiration = datetime.datetime.utcnow() + DUR_ONE_HOUR
