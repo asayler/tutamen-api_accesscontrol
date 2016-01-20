@@ -229,7 +229,7 @@ def create_authorizations():
     json_in = flask.request.get_json(force=True)
     app.logger.debug("json_in = '{}'".format(json_in))
 
-    userdata = json_in['userdata']
+    userdata = json_in.get('userdata', {})
     app.logger.debug("userdata = '{}'".format(userdata))
 
     objperm = json_in['objperm']
