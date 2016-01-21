@@ -250,7 +250,11 @@ def get_authorizations(authz_uid):
     authz = flask.g.srv_ac.authorizations.get(key=authz_uid)
     app.logger.debug("authz = '{}'".format(authz))
 
-    # Todo: verify request came from same client
+    if flask.g.clientuid != authz.clientuid:
+        msg = "Certificate clientuid '{}' does not".format(flask.g.clientuid)
+        msg += " match authorization clientuid '{}'".format(authz.clientuid)
+        app.logger.warning(msg)
+        raise exceptions.ClientUIDError("")
 
     json_out = {'status': authz.status,
                 'expiration': authz.expiration_timestamp,
@@ -286,32 +290,14 @@ def object_exists(error):
     res.status_code = err['status']
     return res
 
-# @app.errorhandler(KeyError)
-# def bad_key(error):
-#     err = { 'status': 400,
-#             'message': "{}".format(error) }
-#     app.logger.info("Client Error: KeyError: {}".format(err))
-#     res = flask.jsonify(err)
-#     res.status_code = err['status']
-#     return res
-
-# @app.errorhandler(ValueError)
-# def bad_value(error):
-#     err = { 'status': 400,
-#             'message': "{}".format(error) }
-#     app.logger.info("Client Error: ValueError: {}".format(err))
-#     res = flask.jsonify(err)
-#     res.status_code = err['status']
-#     return res
-
-# @app.errorhandler(TypeError)
-# def bad_type(error):
-#     err = { 'status': 400,
-#             'message': "{}".format(error) }
-#     app.logger.info("Client Error: TypeError: {}".format(err))
-#     res = flask.jsonify(err)
-#     res.status_code = err['status']
-#     return res
+@app.errorhandler(exceptions.ClientUIDError)
+def bad_clientuid(error):
+    err = { 'status': 401,
+            'message': "{}".format(error) }
+    app.logger.info("Client Error: ClientUIDError: {}".format(err))
+    res = flask.jsonify(err)
+    res.status_code = err['status']
+    return res
 
 @app.errorhandler(exceptions.SSLClientCertError)
 def bad_cert(error):
