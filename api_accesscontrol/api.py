@@ -180,7 +180,6 @@ def get_pub_sigkey():
 def bootstrap_account_create():
 
     app.logger.debug("BOOTSTRAP ACCOUNT")
-    app.logger.debug("data_in = '{}'".format(flask.request.data))
 
     json_in = flask.request.get_json(force=True)
     app.logger.debug("json_in = '{}'".format(json_in))
@@ -224,7 +223,6 @@ def bootstrap_account_create():
 def create_authorizations():
 
     app.logger.debug("POST AUTHORIZATIONS")
-    app.logger.debug("data_in = '{}'".format(flask.request.data))
 
     json_in = flask.request.get_json(force=True)
     app.logger.debug("json_in = '{}'".format(json_in))
