@@ -116,15 +116,15 @@ def authenticate_client():
             status = cert_info['SSL_CLIENT_VERIFY']
             if status != 'SUCCESS':
                 msg = "Could not verify client cert: {}".format(status)
-                app.logger.error(msg)
+                app.logger.warning(msg)
                 raise exceptions.SSLClientCertError(msg)
 
-            account_id = cert_info['SSL_CLIENT_S_DN_O']
-            client_id = uuid.UUID(cert_info['SSL_CLIENT_S_DN_CN'])
-            msg = "Authenticated Client '{}' for Account '{}'".format(client_id, account_id)
+            accountuid = cert_info['SSL_CLIENT_S_DN_O']
+            clientuid = uuid.UUID(cert_info['SSL_CLIENT_S_DN_CN'])
+            msg = "Authenticated Client '{}' for Account '{}'".format(clientuid, accountuid)
             app.logger.debug(msg)
-            flask.g.account_id = account_id
-            flask.g.client_id = client_id
+            flask.g.accountuid = accountuid
+            flask.g.clientuid = clientuid
 
             # Call Function
             return func(*args, **kwargs)
@@ -229,7 +229,7 @@ def create_authorizations():
     expiration = datetime.datetime.utcnow() + DUR_ONE_HOUR
 
     authz = flask.g.srv_ac.authorizations.create(userdata=userdata,
-                                                 clientuid=flask.g.client_id,
+                                                 clientuid=flask.g.clientuid,
                                                  expiration=expiration,
                                                  objperm=objperm,
                                                  objtype=objtype,
