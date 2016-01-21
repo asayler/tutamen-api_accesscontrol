@@ -174,35 +174,49 @@ def bootstrap_account_create():
     json_in = flask.request.get_json(force=True)
     app.logger.debug("json_in = '{}'".format(json_in))
 
+    # Check Password
     if config.BOOTSTRAP_PASSWORD:
         password = json_in.get('password', "")
         if password != config.BOOTSTRAP_PASSWORD:
             flask.abort(401)
 
+    # Get Required Attributes
+    try:
+        client_csr = json_in['client_csr']
+    except KeyError as e:
+        msg = "Missing required paremeter: {}".format(e)
+        app.logger.warning(msg)
+        raise exceptions.MissingAttributeError(msg)
+
+    # Get Optional Attributes
     account_userdata = json_in.get('account_userdata', {})
-    app.logger.debug("account_userdata = '{}'".format(account_userdata))
     account_uid = json_in.get('account_uid', None)
-    app.logger.debug("accuid = '{}'".format(account_uid))
-
     client_userdata = json_in.get('client_userdata', {})
-    app.logger.debug("client_userdata = '{}'".format(client_userdata))
     client_uid = json_in.get('client_uid', None)
-    app.logger.debug("client_uid = '{}'".format(client_uid))
-    client_csr = json_in['client_csr']
-    app.logger.debug("client_csr = '{}'".format(client_csr))
 
+    # Log Attributes
+    app.logger.debug("client_csr = '{}'".format(client_csr))
+    app.logger.debug("account_userdata = '{}'".format(account_userdata))
+    app.logger.debug("accuid = '{}'".format(account_uid))
+    app.logger.debug("client_userdata = '{}'".format(client_userdata))
+    app.logger.debug("client_uid = '{}'".format(client_uid))
+
+    # Create Account
     account = flask.g.srv_ac.accounts.create(userdata=account_userdata,
                                              key=account_uid)
     app.logger.debug("account = '{}'".format(account))
 
+    # Create Client
     client = account.clients.create(userdata=client_userdata,
                                     key=client_uid,
                                     csr_pem=client_csr)
     app.logger.debug("client = '{}'".format(client))
 
+    # Returen Response
     json_out = {_KEY_ACCOUNTS: [account.key],
                 _KEY_CLIENTS: [client.key],
                 _KEY_CLIENTS_CERTS: {client.key: client.crt}}
+    app.logger.debug("json_out = '{}'".format(json_out))
     return flask.jsonify(json_out)
 
 
@@ -224,7 +238,7 @@ def create_authorizations():
     except KeyError as e:
         msg = "Missing required paremeter: {}".format(e)
         app.logger.warning(msg)
-        raise excpetions.MissingAttributeError(msg)
+        raise exceptions.MissingAttributeError(msg)
 
     # Get Optional Attributes
     userdata = json_in.get('userdata', {})
@@ -255,6 +269,7 @@ def create_authorizations():
 
     # Return Response
     json_out = {_KEY_AUTHORIZATIONS: [authz.key]}
+    app.logger.debug("json_out = '{}'".format(json_out))
     return flask.jsonify(json_out)
 
 @app.route("/{}/<authz_uid>/".format(_KEY_AUTHORIZATIONS), methods=['GET'])
@@ -288,8 +303,11 @@ def get_authorizations(authz_uid):
         json_out['token'] = ""
 
     # Return Response
-    app.logger.debug("json_out = '{}'".format(json_out))
+    log_out = dict(json_out)
+    log_out['token'] = "REDACTED" if log_out['token'] else log_out['token'] 
+    app.logger.debug("json_out = '{}'".format(log_out))
     return flask.jsonify(json_out)
+
 
 ## Verifier Endpoints ##
 
@@ -298,25 +316,31 @@ def get_authorizations(authz_uid):
 def create_verifiers():
 
     app.logger.debug("POST VERIFIERS")
+
     json_in = flask.request.get_json(force=True)
     app.logger.debug("json_in = '{}'".format(json_in))
 
+    # Get Optional Attributes
+    uid = json_in.get('uid', None)
+    accounts = json_in.get('accounts', [])
+    authenticators = json_in.get('authenticators', [])
     userdata = json_in.get('userdata', {})
+
+    # Log Attributes
+    app.logger.debug("uid = '{}'".format(uid))
+    app.logger.debug("accounts = '{}'".format(accounts))
+    app.logger.debug("authenticators = '{}'".format(authenticators))
     app.logger.debug("userdata = '{}'".format(userdata))
 
-    uid = json_in.get('uid', None)
-    app.logger.debug("uid = '{}'".format(uid))
-    accounts = json_in.get('accounts', [])
-    app.logger.debug("accounts = '{}'".format(accounts))
-    authenticators = json_in.get('authenticators', [])
-    app.logger.debug("authenticators = '{}'".format(authenticators))
-
+    # Create Verifier
     verifer = flask.g.srv_ac.verifiers.create(key=uid, userdata=userdata,
                                               accounts=accounts,
                                               authenticators=authenticators)
     app.logger.debug("verifier = '{}'".format(verifier))
 
+    # Return Response
     json_out = {_KEY_VERIFIERS: [verifier.key]}
+    app.logger.debug("json_out = '{}'".format(json_out))
     return flask.jsonify(json_out)
 
 @app.route("/{}/<verifiers_uid>/".format(_KEY_VERIFIERS), methods=['GET'])
@@ -324,13 +348,16 @@ def create_verifiers():
 def get_verifiers(verifiers_uid):
 
     app.logger.debug("GET VERIFIERS")
+
+    # Get Verifier
     verifier = flask.g.srv_ac.verifiers.get(key=verifiers_uid)
     app.logger.debug("verifier = '{}'".format(verifier))
 
+    # Return Response
     json_out = {'uid': verifier.key,
                 'accounts': verifier.accounts.by_uid(),
                 'authenticators': verifier.authenticators.by_uid()}
-
+    app.logger.debug("json_out = '{}'".format(json_out))
     return flask.jsonify(json_out)
 
 
