@@ -45,6 +45,7 @@ _KEY_CLIENTS = "clients"
 _KEY_CLIENTS_CERTS = "{}_certs".format(_KEY_CLIENTS)
 
 _KEY_AUTHORIZATIONS = "authorizations"
+_KEY_VERIFIERS = "verifiers"
 
 
 ### Global Setup ###
@@ -266,6 +267,48 @@ def get_authorizations(authz_uid):
         json_out['token'] = authz.export_token()
     else:
         json_out['token'] = ""
+
+    return flask.jsonify(json_out)
+
+## Verifier Endpoints ##
+
+@app.route("/{}/".format(_KEY_VERIFIERS), methods=['POST'])
+@authenticate_client()
+def create_verifiers():
+
+    app.logger.debug("POST VERIFIERS")
+    json_in = flask.request.get_json(force=True)
+    app.logger.debug("json_in = '{}'".format(json_in))
+
+    userdata = json_in.get('userdata', {})
+    app.logger.debug("userdata = '{}'".format(userdata))
+
+    uid = json_in.get('uid', None)
+    app.logger.debug("uid = '{}'".format(uid))
+    accounts = json_in.get('accounts', [])
+    app.logger.debug("accounts = '{}'".format(accounts))
+    authenticators = json_in.get('authenticators', [])
+    app.logger.debug("authenticators = '{}'".format(authenticators))
+
+    verifer = flask.g.srv_ac.verifiers.create(key=uid, userdata=userdata,
+                                              accounts=accounts,
+                                              authenticators=authenticators)
+    app.logger.debug("verifier = '{}'".format(verifier))
+
+    json_out = {_KEY_VERIFIERS: [verifier.key]}
+    return flask.jsonify(json_out)
+
+@app.route("/{}/<verifiers_uid>/".format(_KEY_VERIFIERS), methods=['GET'])
+@authenticate_client()
+def get_authorizations(verifiers_uid):
+
+    app.logger.debug("GET VERIFIERS")
+    verifier = flask.g.srv_ac.verifiers.get(key=verifiers_uid)
+    app.logger.debug("verifier = '{}'".format(verifier))
+
+    json_out = {'uid': verifier.key,
+                'accounts': verifier.accounts.by_uid(),
+                'authenticators': verifier.authenticators.by_uid()}
 
     return flask.jsonify(json_out)
 
