@@ -12,6 +12,9 @@
 class APIError(Exception):
     pass
 
+class MissingAttributeError(APIError):
+    pass
+
 class SSLError(APIError):
     pass
 

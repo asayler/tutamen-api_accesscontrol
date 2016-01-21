@@ -217,19 +217,31 @@ def create_authorizations():
     json_in = flask.request.get_json(force=True)
     app.logger.debug("json_in = '{}'".format(json_in))
 
-    userdata = json_in.get('userdata', {})
-    app.logger.debug("userdata = '{}'".format(userdata))
+    # Get Required Attributes
+    try:
+        objperm = json_in['objperm']
+        objtype = json_in['objtype']
+    except KeyError as e:
+        msg = "Missing required paremeter: {}".format(e)
+        app.logger.warning(msg)
+        raise excpetions.MissingAttributeError(msg)
 
-    objperm = json_in['objperm']
-    app.logger.debug("objperm = '{}'".format(objperm))
-    objtype = json_in['objtype']
-    app.logger.debug("objtype = '{}'".format(objtype))
+    # Get Optional Attributes
+    userdata = json_in.get('userdata', {})
     objuid = json_in.get('objuid', None)
     objuid = uuid.UUID(objuid) if objuid else None
-    app.logger.debug("objuid = '{}'".format(objuid))
 
+    # Generate Server Attributes
     expiration = datetime.datetime.utcnow() + DUR_ONE_HOUR
 
+    # Log Attributes
+    app.logger.debug("objperm = '{}'".format(objperm))
+    app.logger.debug("objtype = '{}'".format(objtype))
+    app.logger.debug("objuid = '{}'".format(objuid))
+    app.logger.debug("userdata = '{}'".format(userdata))
+    app.logger.debug("expiration = '{}'".format(expiration))
+
+    # Create Object
     authz = flask.g.srv_ac.authorizations.create(userdata=userdata,
                                                  clientuid=flask.g.clientuid,
                                                  expiration=expiration,
@@ -241,6 +253,7 @@ def create_authorizations():
     # Todo: make this asynchronous via seperate verification daemon
     authz.verify()
 
+    # Return Response
     json_out = {_KEY_AUTHORIZATIONS: [authz.key]}
     return flask.jsonify(json_out)
 
@@ -249,26 +262,33 @@ def create_authorizations():
 def get_authorizations(authz_uid):
 
     app.logger.debug("GET AUTHORIZATIONS")
+
+    # Get Athorization
     authz = flask.g.srv_ac.authorizations.get(key=authz_uid)
     app.logger.debug("authz = '{}'".format(authz))
 
+    # Verify Matching Client
     if flask.g.clientuid != authz.clientuid:
         msg = "Certificate clientuid '{}' does not".format(flask.g.clientuid)
         msg += " match authorization clientuid '{}'".format(authz.clientuid)
         app.logger.warning(msg)
         raise exceptions.ClientUIDError("")
 
+    # Build Output JSON
     json_out = {'status': authz.status,
                 'expiration': authz.expiration_timestamp,
                 'objperm': authz.objperm,
                 'objtype': authz.objtype,
                 'objuid': str(authz.objuid)}
 
+    # Fetch token if ready
     if authz.status == accesscontrol.AUTHZ_STATUS_APPROVED:
         json_out['token'] = authz.export_token()
     else:
         json_out['token'] = ""
 
+    # Return Response
+    app.logger.debug("json_out = '{}'".format(json_out))
     return flask.jsonify(json_out)
 
 ## Verifier Endpoints ##
@@ -348,6 +368,15 @@ def bad_cert(error):
     err = { 'status': 401,
             'message': "{}".format(error) }
     app.logger.info("Client Error: SSLClientCertError: {}".format(err))
+    res = flask.jsonify(err)
+    res.status_code = err['status']
+    return res
+
+@app.errorhandler(exceptions.MissingAttributeError)
+def missing_attribute(error):
+    err = { 'status': 400,
+            'message': "{}".format(error) }
+    app.logger.info("Client Error: MissingAttributeError: {}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
