@@ -151,14 +151,14 @@ def get_root():
 def get_pub_cacert():
 
     app.logger.debug("GET PUB CACERT")
-    json_out = {_KEY_CACERT: [flask.g.srv_ac.ca_crt]}
+    json_out = {_KEY_CACERT: flask.g.srv_ac.ca_crt}
     return flask.jsonify(json_out)
 
 @app.route("/{}/{}/".format(_EP_PUBLIC, _KEY_SIGKEY), methods=['GET'])
 def get_pub_sigkey():
 
     app.logger.debug("GET PUB SIGKEY")
-    json_out = {_KEY_SIGKEY: [flask.g.srv_ac.sigkey_pub]}
+    json_out = {_KEY_SIGKEY: flask.g.srv_ac.sigkey_pub}
     return flask.jsonify(json_out)
 
 
@@ -211,10 +211,11 @@ def bootstrap_account_create():
 def create_authorizations():
 
     app.logger.debug("POST AUTHORIZATIONS")
+
     json_in = flask.request.get_json(force=True)
     app.logger.debug("json_in = '{}'".format(json_in))
 
-    userdata = json_in['userdata']
+    userdata = json_in.get('userdata', {})
     app.logger.debug("userdata = '{}'".format(userdata))
 
     objperm = json_in['objperm']
