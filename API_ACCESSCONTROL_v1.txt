@@ -10,8 +10,6 @@ GET     /public/sigkey/                               none                 Get P
 POST    /authorizations/                              none                 Request Authorization
 GET     /authorizations/<uid>/                        none                 Get Authorization
 # GET     /authorizations/<uid>/status/                 none                 Get Authorization Status
-# GET     /authorizations/<uid>/username/               none                 Get Authorization Username
-# GET     /authorizations/<uid>/password/               none                 Get Authorization Password
 
 ---------------------------------------------------------------------------------------
 
