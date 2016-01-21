@@ -301,7 +301,7 @@ def create_verifiers():
 
 @app.route("/{}/<verifiers_uid>/".format(_KEY_VERIFIERS), methods=['GET'])
 @authenticate_client()
-def get_authorizations(verifiers_uid):
+def get_verifiers(verifiers_uid):
 
     app.logger.debug("GET VERIFIERS")
     verifier = flask.g.srv_ac.verifiers.get(key=verifiers_uid)
