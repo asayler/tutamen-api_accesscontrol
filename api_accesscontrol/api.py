@@ -53,7 +53,6 @@ app = flask.Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
 app.debug = False
 cors = flask.ext.cors.CORS(app, headers=["Content-Type", "Authorization"])
-httpauth = flask.ext.httpauth.HTTPBasicAuth()
 
 
 ### Logging ###
@@ -134,17 +133,6 @@ def authenticate_client():
 
     return _decorator
 
-@httpauth.verify_password
-def verify_login(username, password):
-
-    # Note: Token limited to header length
-    # Note: How to handle multiple tokens per request?
-    token = username
-    app.logger.debug("verify_token: token={}".format(token))
-
-    flask.g.token = None
-
-    return True
 
 ### Endpoints ###
 
