@@ -113,15 +113,16 @@ def authenticate_client():
         @functools.wraps(func)
         def _wrapper(*args, **kwargs):
 
-            cert_info = flask.request.environ
-            status = cert_info['SSL_CLIENT_VERIFY']
+            env = flask.request.environ
+            status = env.get('SSL_CLIENT_VERIFY', None)
             if status != 'SUCCESS':
                 msg = "Could not verify client cert: {}".format(status)
                 app.logger.warning(msg)
                 raise exceptions.SSLClientCertError(msg)
 
-            accountuid = cert_info['SSL_CLIENT_S_DN_O']
-            clientuid = uuid.UUID(cert_info['SSL_CLIENT_S_DN_CN'])
+            accountuid = env.get('SSL_CLIENT_S_DN_O', None)
+            clientuid = env.get('SSL_CLIENT_S_DN_CN', None)
+            clientuid = uuid.UUID(clientuid) if clientuid else None
             msg = "Authenticated Client '{}' for Account '{}'".format(clientuid, accountuid)
             app.logger.debug(msg)
             flask.g.accountuid = accountuid
