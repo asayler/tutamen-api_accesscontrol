@@ -15,6 +15,18 @@ class APIError(Exception):
 class MissingAttributeError(APIError):
     pass
 
+class UnknownObjType(APIError):
+
+    def __init__(self, objtype):
+        msg = "Unknown objtyp '{}'".format(objtype)
+        super().__init__(msg)
+
+class MissingDefaultVerifiers(APIError):
+
+    def __init__(self):
+        msg = "Default verifiers required but not found"
+        super().__init__(msg)
+
 class SSLError(APIError):
     pass
 

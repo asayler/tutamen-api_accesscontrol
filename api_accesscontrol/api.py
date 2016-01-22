@@ -20,6 +20,7 @@ from pcollections import backends
 
 from pytutamen_server import datatypes
 from pytutamen_server import accesscontrol
+from pytutamen_server import constants
 
 from . import exceptions
 from . import config
@@ -46,6 +47,7 @@ _KEY_CLIENTS_CERTS = "{}_certs".format(_KEY_CLIENTS)
 
 _KEY_AUTHORIZATIONS = "authorizations"
 _KEY_VERIFIERS = "verifiers"
+_KEY_PERMISSIONS = "permissions"
 
 
 ### Global Setup ###
@@ -304,7 +306,7 @@ def get_authorizations(authz_uid):
 
     # Return Response
     log_out = dict(json_out)
-    log_out['token'] = "REDACTED" if log_out['token'] else log_out['token'] 
+    log_out['token'] = "REDACTED" if log_out['token'] else log_out['token']
     app.logger.debug("json_out = '{}'".format(log_out))
     return flask.jsonify(json_out)
 
@@ -361,6 +363,114 @@ def get_verifiers(verifiers_uid):
     return flask.jsonify(json_out)
 
 
+## Permission Group Endpoints ##
+
+@app.route("/{}/".format(_KEY_PERMISSIONS), methods=['POST'])
+@authenticate_client()
+def create_permissions():
+
+    app.logger.debug("POST PERMISSIONS")
+
+    json_in = flask.request.get_json(force=True)
+    app.logger.debug("json_in = '{}'".format(json_in))
+
+    # Get Required Attributes
+    try:
+        objtype = json_in[constants.KEY_OBJTYPE]
+    except KeyError as e:
+        msg = "Missing required paremeter: {}".format(e)
+        app.logger.warning(msg)
+        raise exceptions.MissingAttributeError(msg)
+
+    # Case by Obj Type
+    app.logger.debug("objtype = '{}'".format(objtype))
+    if objtype == constants.TYPE_COL:
+
+        # Get Required Attributes
+        try:
+            objuid = json_in[constants.KEY_OBJUID]
+            objuid = uuid.UUID(objuid)
+        except KeyError as e:
+            msg = "Missing required paremeter: {}".format(e)
+            app.logger.warning(msg)
+            raise exceptions.MissingAttributeError(msg)
+        else:
+            app.logger.debug("objuid = '{}'".format(objuid))
+
+        # Get verifier lists
+        v_create = json_in.get(constants.PERM_CREATE, None)
+        v_read = json_in.get(constants.PERM_READ, None)
+        v_modify = json_in.get(constants.PERM_MODIFY, None)
+        v_delete = json_in.get(constants.PERM_DELETE, None)
+        v_ac = json_in.get(constants.PERM_AC, None)
+        v_default = json_in.get(constants.PERM_DEFAULT, None)
+
+        # Log Verfiers
+        app.logger.debug("v_create = '{}'".format(v_create))
+        app.logger.debug("v_read = '{}'".format(v_read))
+        app.logger.debug("v_modify = '{}'".format(v_modify))
+        app.logger.debug("v_delete = '{}'".format(v_delete))
+        app.logger.debug("v_ac = '{}'".format(v_ac))
+        app.logger.debug("v_default = '{}'".format(v_default))
+
+        # Check for default
+        if not v_default:
+            if v_create and v_read and v_modify and v_delete and v_ac:
+                pass
+            else:
+                raise exceptions.MissingDefaultVerifiers()
+
+        # Create CollectionPerms
+        perms = flask.g.srv_ac.collection_perms.create(objuid=objuid,
+                                                       v_create=v_create,
+                                                       v_read=v_read,
+                                                       v_modify=v_modify,
+                                                       v_delete=v_delete,
+                                                       v_ac=v_ac,
+                                                       v_default=v_default)
+        app.logger.debug("perms = '{}'".format(perms))
+
+    else:
+        raise exceptions.UnknownObjType(objtype)
+
+    # Return Response
+    perm_out = {constants.KEY_OBJTYPE: objtype}
+    if objuid:
+        perm_out[constants.KEY_OBJUID] = str(objuid)
+    json_out = {_KEY_PERMISSIONS: [perm_out]}
+    app.logger.debug("json_out = '{}'".format(json_out))
+    return flask.jsonify(json_out)
+
+@app.route("/{}/<objtype>/<objuid>/".format(_KEY_PERMISSIONS), methods=['GET'])
+@authenticate_client()
+def get_permissions(objtype, objuid):
+
+    app.logger.debug("GET PERMISSIONS")
+
+    if objtype == constants.TYPE_COL:
+
+        # Get CollectionPerms
+        objuid = uuid.UUID(objuid)
+        perms = flask.g.srv_ac.collection_perms.get(objuid=objuid)
+        app.logger.debug("perms = '{}'".format(perms))
+
+        # Build Response
+        json_out = {'objtype': objtype,
+                    'objuid': str(objuid),
+                    'create': list(perms.perm_create.by_uid()),
+                    'read': list(perms.perm_read.by_uid()),
+                    'modify': list(perms.perm_modify.by_uid()),
+                    'delete': list(perms.perm_delete.by_uid()),
+                    'ac': list(perms.perm_ac.by_uid())}
+
+    else:
+        raise exceptions.UnknownObjType(objtype)
+
+    # Return Response
+    app.logger.debug("json_out = '{}'".format(json_out))
+    return flask.jsonify(json_out)
+
+
 ### Error Handling ###
 
 @app.errorhandler(datatypes.ObjectExists)
@@ -404,6 +514,24 @@ def missing_attribute(error):
     err = { 'status': 400,
             'message': "{}".format(error) }
     app.logger.info("Client Error: MissingAttributeError: {}".format(err))
+    res = flask.jsonify(err)
+    res.status_code = err['status']
+    return res
+
+@app.errorhandler(exceptions.UnknownObjType)
+def unknown_objtype(error):
+    err = { 'status': 400,
+            'message': "{}".format(error) }
+    app.logger.info("Client Error: UnknownObjType: {}".format(err))
+    res = flask.jsonify(err)
+    res.status_code = err['status']
+    return res
+
+@app.errorhandler(exceptions.MissingDefaultVerifiers)
+def missing_default_verifiers(error):
+    err = { 'status': 400,
+            'message': "{}".format(error) }
+    app.logger.info("Client Error: MissingDefaultVerifiers: {}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
