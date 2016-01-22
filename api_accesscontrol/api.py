@@ -333,7 +333,7 @@ def create_verifiers():
     app.logger.debug("userdata = '{}'".format(userdata))
 
     # Create Verifier
-    verifer = flask.g.srv_ac.verifiers.create(key=uid, userdata=userdata,
+    verifier = flask.g.srv_ac.verifiers.create(key=uid, userdata=userdata,
                                               accounts=accounts,
                                               authenticators=authenticators)
     app.logger.debug("verifier = '{}'".format(verifier))
@@ -355,8 +355,8 @@ def get_verifiers(verifiers_uid):
 
     # Return Response
     json_out = {'uid': verifier.key,
-                'accounts': verifier.accounts.by_uid(),
-                'authenticators': verifier.authenticators.by_uid()}
+                'accounts': list(verifier.accounts.by_uid()),
+                'authenticators': list(verifier.authenticators.by_uid())}
     app.logger.debug("json_out = '{}'".format(json_out))
     return flask.jsonify(json_out)
 
