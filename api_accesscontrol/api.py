@@ -122,10 +122,11 @@ def authenticate_client():
                 app.logger.warning(msg)
                 raise exceptions.SSLClientCertError(msg)
 
-            accountuid = env.get('SSL_CLIENT_S_DN_O', None)
+            accountuid = env.get('SSL_CLIENT_S_DN_OU', None)
+            accountuid = uuid.UUID(accountuid) if accountuid else None
             clientuid = env.get('SSL_CLIENT_S_DN_CN', None)
             clientuid = uuid.UUID(clientuid) if clientuid else None
-            msg = "Authenticated Client '{}' for Account '{}'".format(clientuid, accountuid)
+            msg = "Authenticated Client '{}' from Account '{}'".format(clientuid, accountuid)
             app.logger.debug(msg)
             flask.g.accountuid = accountuid
             flask.g.clientuid = clientuid
@@ -259,6 +260,7 @@ def create_authorizations():
 
     # Create Object
     authz = flask.g.srv_ac.authorizations.create(userdata=userdata,
+                                                 accountuid=flask.g.accountuid,
                                                  clientuid=flask.g.clientuid,
                                                  expiration=expiration,
                                                  objperm=objperm,
@@ -284,8 +286,15 @@ def get_authorizations(authz_uid):
     authz = flask.g.srv_ac.authorizations.get(key=authz_uid)
     app.logger.debug("authz = '{}'".format(authz))
 
+    # Verify Matching Account
+    if (flask.g.accountuid != authz.accountuid):
+        msg = "Certificate accountuid '{}' does not".format(flask.g.accountuid)
+        msg += " match authorization accountuid '{}'".format(authz.accountuid)
+        app.logger.warning(msg)
+        raise exceptions.AccountUIDError("")
+
     # Verify Matching Client
-    if flask.g.clientuid != authz.clientuid:
+    if (flask.g.clientuid != authz.clientuid):
         msg = "Certificate clientuid '{}' does not".format(flask.g.clientuid)
         msg += " match authorization clientuid '{}'".format(authz.clientuid)
         app.logger.warning(msg)
@@ -491,6 +500,15 @@ def object_exists(error):
     err = { 'status': 404,
             'message': "{}".format(error) }
     app.logger.info("Client Error: Object Does Not Exist: {}".format(err))
+    res = flask.jsonify(err)
+    res.status_code = err['status']
+    return res
+
+@app.errorhandler(exceptions.AccountUIDError)
+def bad_accountuid(error):
+    err = { 'status': 401,
+            'message': "{}".format(error) }
+    app.logger.info("Account Error: AccountUIDError: {}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res

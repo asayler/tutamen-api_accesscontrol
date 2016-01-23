@@ -33,5 +33,8 @@ class SSLError(APIError):
 class SSLClientCertError(SSLError):
     pass
 
+class AccountUIDError(SSLClientCertError):
+    pass
+
 class ClientUIDError(SSLClientCertError):
     pass
