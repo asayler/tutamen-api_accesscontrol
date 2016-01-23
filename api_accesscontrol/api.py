@@ -186,7 +186,7 @@ def bootstrap_account_create():
     try:
         client_csr = json_in['client_csr']
     except KeyError as e:
-        msg = "Missing required paremeter: {}".format(e)
+        msg = "Missing required parameter: {}".format(e)
         app.logger.warning(msg)
         raise exceptions.MissingAttributeError(msg)
 
@@ -238,7 +238,7 @@ def create_authorizations():
         objperm = json_in['objperm']
         objtype = json_in['objtype']
     except KeyError as e:
-        msg = "Missing required paremeter: {}".format(e)
+        msg = "Missing required parameter: {}".format(e)
         app.logger.warning(msg)
         raise exceptions.MissingAttributeError(msg)
 
@@ -371,6 +371,7 @@ def create_permissions():
 
     app.logger.debug("POST PERMISSIONS")
 
+    # Log JSON
     json_in = flask.request.get_json(force=True)
     app.logger.debug("json_in = '{}'".format(json_in))
 
@@ -384,54 +385,55 @@ def create_permissions():
 
     # Case by Obj Type
     app.logger.debug("objtype = '{}'".format(objtype))
-    if objtype == constants.TYPE_COL:
-
-        # Get Required Attributes
+    if objtype in constants.SRV_TYPES:
+        objuid = None
+    elif objtype in constants.UID_TYPES:
         try:
             objuid = json_in[constants.KEY_OBJUID]
             objuid = uuid.UUID(objuid)
         except KeyError as e:
-            msg = "Missing required paremeter: {}".format(e)
+            msg = "Missing required parameter: {}".format(e)
             app.logger.warning(msg)
             raise exceptions.MissingAttributeError(msg)
         else:
             app.logger.debug("objuid = '{}'".format(objuid))
-
-        # Get verifier lists
-        v_create = json_in.get(constants.PERM_CREATE, None)
-        v_read = json_in.get(constants.PERM_READ, None)
-        v_modify = json_in.get(constants.PERM_MODIFY, None)
-        v_delete = json_in.get(constants.PERM_DELETE, None)
-        v_ac = json_in.get(constants.PERM_AC, None)
-        v_default = json_in.get(constants.PERM_DEFAULT, None)
-
-        # Log Verfiers
-        app.logger.debug("v_create = '{}'".format(v_create))
-        app.logger.debug("v_read = '{}'".format(v_read))
-        app.logger.debug("v_modify = '{}'".format(v_modify))
-        app.logger.debug("v_delete = '{}'".format(v_delete))
-        app.logger.debug("v_ac = '{}'".format(v_ac))
-        app.logger.debug("v_default = '{}'".format(v_default))
-
-        # Check for default
-        if not v_default:
-            if v_create and v_read and v_modify and v_delete and v_ac:
-                pass
-            else:
-                raise exceptions.MissingDefaultVerifiers()
-
-        # Create CollectionPerms
-        perms = flask.g.srv_ac.collection_perms.create(objuid=objuid,
-                                                       v_create=v_create,
-                                                       v_read=v_read,
-                                                       v_modify=v_modify,
-                                                       v_delete=v_delete,
-                                                       v_ac=v_ac,
-                                                       v_default=v_default)
-        app.logger.debug("perms = '{}'".format(perms))
-
     else:
         raise exceptions.UnknownObjType(objtype)
+    app.logger.debug("objuid = '{}'".format(objuid))
+
+    # Get Verifiers
+    v_create = json_in.get(constants.PERM_CREATE, None)
+    v_read = json_in.get(constants.PERM_READ, None)
+    v_modify = json_in.get(constants.PERM_MODIFY, None)
+    v_delete = json_in.get(constants.PERM_DELETE, None)
+    v_ac = json_in.get(constants.PERM_AC, None)
+    v_default = json_in.get(constants.PERM_DEFAULT, None)
+
+    # Log Verfiers
+    app.logger.debug("v_create = '{}'".format(v_create))
+    app.logger.debug("v_read = '{}'".format(v_read))
+    app.logger.debug("v_modify = '{}'".format(v_modify))
+    app.logger.debug("v_delete = '{}'".format(v_delete))
+    app.logger.debug("v_ac = '{}'".format(v_ac))
+    app.logger.debug("v_default = '{}'".format(v_default))
+
+    # Check for default
+    if not v_default:
+        if v_create and v_read and v_modify and v_delete and v_ac:
+            pass
+        else:
+            raise exceptions.MissingDefaultVerifiers()
+
+    # Create Permissions
+    perms = flask.g.srv_ac.permissions.create(objuid=objuid,
+                                              objtype=objtype,
+                                              v_create=v_create,
+                                              v_read=v_read,
+                                              v_modify=v_modify,
+                                              v_delete=v_delete,
+                                              v_ac=v_ac,
+                                              v_default=v_default)
+    app.logger.debug("perms = '{}'".format(perms))
 
     # Return Response
     perm_out = {constants.KEY_OBJTYPE: objtype}
@@ -447,24 +449,26 @@ def get_permissions(objtype, objuid):
 
     app.logger.debug("GET PERMISSIONS")
 
-    if objtype == constants.TYPE_COL:
-
-        # Get CollectionPerms
+    # Get UUID if required
+    if objtype in constants.SRV_TYPES:
+        objuid = None
+    if objtype in constants.UID_TYPES:
         objuid = uuid.UUID(objuid)
-        perms = flask.g.srv_ac.collection_perms.get(objuid=objuid)
-        app.logger.debug("perms = '{}'".format(perms))
-
-        # Build Response
-        json_out = {'objtype': objtype,
-                    'objuid': str(objuid),
-                    'create': list(perms.perm_create.by_uid()),
-                    'read': list(perms.perm_read.by_uid()),
-                    'modify': list(perms.perm_modify.by_uid()),
-                    'delete': list(perms.perm_delete.by_uid()),
-                    'ac': list(perms.perm_ac.by_uid())}
-
     else:
         raise exceptions.UnknownObjType(objtype)
+
+    # Get Permissions
+    perms = flask.g.srv_ac.permissions.get(objtype=objtype, objuid=objuid)
+    app.logger.debug("perms = '{}'".format(perms))
+
+    # Build Response
+    json_out = {'objtype': objtype,
+                'objuid': str(objuid) if objuid else "",
+                'create': list(perms.perm_create.by_uid()),
+                'read': list(perms.perm_read.by_uid()),
+                'modify': list(perms.perm_modify.by_uid()),
+                'delete': list(perms.perm_delete.by_uid()),
+                'ac': list(perms.perm_ac.by_uid())}
 
     # Return Response
     app.logger.debug("json_out = '{}'".format(json_out))
