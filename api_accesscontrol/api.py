@@ -513,7 +513,7 @@ def object_exists(error):
 def bad_clientcert(error):
     err = { 'status': 401,
             'message': "{}".format(error) }
-    app.logger.info("Client Error: SSLCleintCertError: {}".format(err))
+    app.logger.info("Client Error: SSLClientCertError: {}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
