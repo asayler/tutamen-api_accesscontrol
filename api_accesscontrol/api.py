@@ -123,9 +123,14 @@ def authenticate_client():
                 raise exceptions.SSLClientCertError(msg)
 
             accountuid = env.get('SSL_CLIENT_S_DN_OU', None)
-            accountuid = uuid.UUID(accountuid) if accountuid else None
             clientuid = env.get('SSL_CLIENT_S_DN_CN', None)
-            clientuid = uuid.UUID(clientuid) if clientuid else None
+            try:
+                accountuid = uuid.UUID(accountuid) if accountuid else None
+                clientuid = uuid.UUID(clientuid) if clientuid else None
+            except ValueError as err:
+                msg = "Client cert contains bad uuid: {}".format(err)
+                app.logger.warning(msg)
+                raise exceptions.SSLClientCertError(msg) from err
             msg = "Authenticated Client '{}' from Account '{}'".format(clientuid, accountuid)
             app.logger.debug(msg)
             flask.g.accountuid = accountuid
@@ -504,11 +509,20 @@ def object_exists(error):
     res.status_code = err['status']
     return res
 
+@app.errorhandler(exceptions.SSLClientCertError)
+def bad_clientcert(error):
+    err = { 'status': 401,
+            'message': "{}".format(error) }
+    app.logger.info("Client Error: SSLCleintCertError: {}".format(err))
+    res = flask.jsonify(err)
+    res.status_code = err['status']
+    return res
+
 @app.errorhandler(exceptions.AccountUIDError)
 def bad_accountuid(error):
     err = { 'status': 401,
             'message': "{}".format(error) }
-    app.logger.info("Account Error: AccountUIDError: {}".format(err))
+    app.logger.info("Client Error: AccountUIDError: {}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
