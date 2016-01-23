@@ -299,7 +299,7 @@ def get_authorizations(authz_uid):
                 'objuid': str(authz.objuid)}
 
     # Fetch token if ready
-    if authz.status == accesscontrol.AUTHZ_STATUS_APPROVED:
+    if authz.status == constants.AUTHZ_STATUS_APPROVED:
         json_out['token'] = authz.export_token()
     else:
         json_out['token'] = ""
