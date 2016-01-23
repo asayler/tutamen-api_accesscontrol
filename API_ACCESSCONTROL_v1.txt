@@ -1,36 +1,49 @@
-### Access Control Server Endpoints ###
+### Implemented AC Endpoints ###
 
-<VERB>   <PATH>                                       <Perms>              <Description>
+<VERB>   <PATH>                           <cert>   <objtype>      <perm>   <Description>
 -------------------------------------------------------------------------------------------
 
-GET     /                                             none                 Welcome Message
-GET     /public/cacert/                               none                 Get CA Cert
-GET     /public/sigkey/                               none                 Get Public Signing Key
+GET     /                                   No       none           none     Welcome Message
 
-POST    /authorizations/                              none                 Request Authorization
-GET     /authorizations/<uid>/                        none                 Get Authorization
-# GET     /authorizations/<uid>/status/                 none                 Get Authorization Status
+GET     /public/cacert/                     No       none           none     Get CA Cert
+GET     /public/sigkey/                     No       none           none     Get Token Signing Key
 
----------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------
 
-GET     /verifiers/                                   srv-verifier-read    List Verfiers
-POST    /verifiers/                                   srv-verifier-create  Create Verifier
-GET     /verifiers/<uid>/                             verifier-read        Get Metadata
-PUT     /verifiers/<uid>/                             verifier-modify      Modify Metadata
-GET     /verifiers/<uid>/inuseby/                     verifier-read        List Assc. Objs/Perms
-GET     /verifiers/<uid>/accounts/                    verifier-read        List Allowed Accounts
-PUT     /verifiers/<uid>/accounts/                    verifier-modify      Add Allowed Accounts
-DELETE  /verifiers/<uid>/accounts/                    verifier-delete      Remove Allowed Accounts
-GET     /verifiers/<uid>/authenticators/              verifier-read        List Required Authenticators
-PUT     /verifiers/<uid>/authenticators/              verifier-modify      Add Required Authenticators
-DELETE  /verifiers/<uid>/authenticators/              verifier-delete      Remove Required Authenticators
-GET     /verifiers/<uid>/verifiers/<pid>/             verifier-perms       List Perm. Verifiers
-PUT     /verifiers/<uid>/verifiers/<pid>/             verifier-perms       Add Perm. Verifiers
-DELETE  /verifiers/<uid>/verifiers/<pid>/             verifier-perms       Remove Perm. Verifiers
+POST    /bootstrap/accounts/                No       none           none     Bootstrap Account + Client
 
-GET     /permissions/<object>/<uid>/<perm>/           <obj>-perms          List Perm. Verifiers
-PUT     /permissions/<object>/<uid>/<perm>/           <obj>-perms          Add Perm. Verifiers
-DELETE  /permissions/<object>/<uid>/<perm>/           <obj>-perms          Remove Perm. Verifiers
+--------------------------------------------------------------------------------------------
+
+POST    /authorizations/                    Yes      none           none     Request Authorization
+GET     /authorizations/<uid>/              Yes      none           none     Get Authorization (Token)
+
+--------------------------------------------------------------------------------------------
+
+POST    /permissions/                       Yes      acserver       create   Create Permissions
+GET     /permissions/<objtype>/<objuid>/    Yes      permissions    read     Get Permissions
+
+--------------------------------------------------------------------------------------------
+
+POST    /verifiers/                         Yes      acserver       create   Create Verifier
+GET     /verifiers/<uid>/                   Yes      verifier       read     Get Verifier
+
+--------------------------------------------------------------------------------------------
+
+
+### Planned AC Endpoints ###
+
+<VERB>   <PATH>                        <cert>   <type>       <perm>          <Description>
+-------------------------------------------------------------------------------------------
+
+GET     /verifiers/                                  verifier-read        List Verifiers
+PUT     /verifiers/<uid>/                            verifier-modify      Modify Metadata
+GET     /verifiers/<uid>/inuseby/                    verifier-read        List Assc. Objs/Perms
+GET     /verifiers/<uid>/accounts/                   verifier-read        List Allowed Accounts
+PUT     /verifiers/<uid>/accounts/                   verifier-modify      Add Allowed Accounts
+DELETE  /verifiers/<uid>/accounts/                   verifier-delete      Remove Allowed Accounts
+GET     /verifiers/<uid>/authenticators/             verifier-read        List Required Authenticators
+PUT     /verifiers/<uid>/authenticators/             verifier-modify      Add Required Authenticators
+DELETE  /verifiers/<uid>/authenticators/             verifier-delete      Remove Required Authenticators
 
 ---------------------------------------------------------------------------------------
 
@@ -66,13 +79,16 @@ DELETE  /accounts/<uid>/clients/<uid>/                account-delete         Del
 
 ---------------------------------------------------------------------------------------
 
+DELETE  /permissions/<type>/<uid>/      Yes      perms          Remove Perm. Verifiers
+
+
 POST     /bootstrap/clients/                          none                   Bootstrap Client
-POST     /bootstrap/accounts/                         none                   Bootstrap Account
+
 
 ---------------------------------------------------------------------------------------
 
 
-### Data Types ###
+### Datatypes ###
 
 Authorization:
     permission
@@ -88,34 +104,32 @@ Authorization:
     <perm>
 
 server:
-    verifier-create
-    verifier-read
-    account-create
-    account-read
-    account-request
-    client-read
-    client-request
+    create
+    read
 
 verifier:
+    create
     read
     modify
     delete
-    perms
+    ac
 
 authenticator:
+    create
     read
     modify
     delete
-    perms
+    ac
 
 account:
+    create
     read
     modify
-    create
     delete
-    perms
+    ac
 
 ### Access Control Schema ###
 
+permissions: [permissions]
 permission: [verfiers] (OR)
 verifer: ([account] (OR), [authenticator] (AND))
