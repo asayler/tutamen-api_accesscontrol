@@ -420,7 +420,7 @@ def create_permissions():
     v_read = json_in.get(constants.PERM_READ, None)
     v_modify = json_in.get(constants.PERM_MODIFY, None)
     v_delete = json_in.get(constants.PERM_DELETE, None)
-    v_ac = json_in.get(constants.PERM_AC, None)
+    v_perms = json_in.get(constants.PERM_AC, None)
     v_default = json_in.get(constants.PERM_DEFAULT, None)
 
     # Log Verfiers
@@ -428,12 +428,12 @@ def create_permissions():
     app.logger.debug("v_read = '{}'".format(v_read))
     app.logger.debug("v_modify = '{}'".format(v_modify))
     app.logger.debug("v_delete = '{}'".format(v_delete))
-    app.logger.debug("v_ac = '{}'".format(v_ac))
+    app.logger.debug("v_perms = '{}'".format(v_perms))
     app.logger.debug("v_default = '{}'".format(v_default))
 
     # Check for default
     if not v_default:
-        if v_create and v_read and v_modify and v_delete and v_ac:
+        if v_create and v_read and v_modify and v_delete and v_perms:
             pass
         else:
             raise exceptions.MissingDefaultVerifiers()
@@ -445,7 +445,7 @@ def create_permissions():
                                               v_read=v_read,
                                               v_modify=v_modify,
                                               v_delete=v_delete,
-                                              v_ac=v_ac,
+                                              v_perms=v_perms,
                                               v_default=v_default)
     app.logger.debug("perms = '{}'".format(perms))
 
@@ -478,11 +478,11 @@ def get_permissions(objtype, objuid):
     # Build Response
     json_out = {'objtype': objtype,
                 'objuid': str(objuid) if objuid else "",
-                'create': list(perms.perm_create.by_uid()),
-                'read': list(perms.perm_read.by_uid()),
-                'modify': list(perms.perm_modify.by_uid()),
-                'delete': list(perms.perm_delete.by_uid()),
-                'ac': list(perms.perm_ac.by_uid())}
+                'create': list(perms.v_create.by_uid()),
+                'read': list(perms.v_read.by_uid()),
+                'modify': list(perms.v_modify.by_uid()),
+                'delete': list(perms.v_delete.by_uid()),
+                'perms': list(perms.v_perms.by_uid())}
 
     # Return Response
     app.logger.debug("json_out = '{}'".format(json_out))
