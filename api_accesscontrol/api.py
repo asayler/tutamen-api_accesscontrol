@@ -191,10 +191,10 @@ def bootstrap_account_create():
     # Get Required Attributes
     try:
         client_csr = json_in['client_csr']
-    except KeyError as e:
-        msg = "Missing required parameter: {}".format(e)
+    except KeyError as err:
+        msg = "Missing required parameter: {}".format(err)
         app.logger.warning(msg)
-        raise exceptions.MissingAttributeError(msg)
+        raise exceptions.MissingAttributeError(msg) from err
 
     # Get Optional Attributes
     account_userdata = json_in.get('account_userdata', {})
@@ -243,10 +243,10 @@ def create_authorizations():
     try:
         objperm = json_in['objperm']
         objtype = json_in['objtype']
-    except KeyError as e:
-        msg = "Missing required parameter: {}".format(e)
+    except KeyError as err:
+        msg = "Missing required parameter: {}".format(err)
         app.logger.warning(msg)
-        raise exceptions.MissingAttributeError(msg)
+        raise exceptions.MissingAttributeError(msg) from err
 
     # Get Optional Attributes
     userdata = json_in.get('userdata', {})
@@ -296,14 +296,14 @@ def get_authorizations(authz_uid):
         msg = "Certificate accountuid '{}' does not".format(flask.g.accountuid)
         msg += " match authorization accountuid '{}'".format(authz.accountuid)
         app.logger.warning(msg)
-        raise exceptions.AccountUIDError("")
+        raise exceptions.AccountUIDError(msg)
 
     # Verify Matching Client
     if (flask.g.clientuid != authz.clientuid):
         msg = "Certificate clientuid '{}' does not".format(flask.g.clientuid)
         msg += " match authorization clientuid '{}'".format(authz.clientuid)
         app.logger.warning(msg)
-        raise exceptions.ClientUIDError("")
+        raise exceptions.ClientUIDError(msg)
 
     # Build Output JSON
     json_out = {'status': authz.status,
@@ -392,10 +392,10 @@ def create_permissions():
     # Get Required Attributes
     try:
         objtype = json_in[constants.KEY_OBJTYPE]
-    except KeyError as e:
+    except KeyError as err:
         msg = "Missing required paremeter: {}".format(e)
         app.logger.warning(msg)
-        raise exceptions.MissingAttributeError(msg)
+        raise exceptions.MissingAttributeError(msg) from err
 
     # Case by Obj Type
     app.logger.debug("objtype = '{}'".format(objtype))
@@ -405,10 +405,10 @@ def create_permissions():
         try:
             objuid = json_in[constants.KEY_OBJUID]
             objuid = uuid.UUID(objuid)
-        except KeyError as e:
-            msg = "Missing required parameter: {}".format(e)
+        except KeyError as err:
+            msg = "Missing required parameter: {}".format(err)
             app.logger.warning(msg)
-            raise exceptions.MissingAttributeError(msg)
+            raise exceptions.MissingAttributeError(msg) from err
         else:
             app.logger.debug("objuid = '{}'".format(objuid))
     else:
