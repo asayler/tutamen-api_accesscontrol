@@ -420,7 +420,7 @@ def create_permissions():
     v_read = json_in.get(constants.PERM_READ, None)
     v_modify = json_in.get(constants.PERM_MODIFY, None)
     v_delete = json_in.get(constants.PERM_DELETE, None)
-    v_perms = json_in.get(constants.PERM_AC, None)
+    v_perms = json_in.get(constants.PERM_PERMS, None)
     v_default = json_in.get(constants.PERM_DEFAULT, None)
 
     # Log Verfiers
