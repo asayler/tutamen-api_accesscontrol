@@ -50,7 +50,7 @@ config.set(SEC_CA, 'CN', "Tutamen AC Server CA")
 config.set(SEC_CA, 'COUNTRY', "US")
 config.set(SEC_CA, 'STATE', "Colorado")
 config.set(SEC_CA, 'LOCALITY', "BOULDER")
-config.set(SEC_CA, 'ORGANIZATION', "Tutamen AC Server")
+config.set(SEC_CA, 'ORG', "Tutamen AC Server")
 config.set(SEC_CA, 'OU', "CA")
 config.set(SEC_CA, 'EMAIL', "admin@tutamen.net")
 config.set(SEC_CA, 'CERT_PATH', os.path.join(PROJ_DIR, "ca.crt"))
@@ -90,8 +90,8 @@ CA_STATE = os.environ.get('TUTAMEN_API_AC_CA_STATE',
                           config.get(SEC_CA, 'STATE'))
 CA_LOCALITY = os.environ.get('TUTAMEN_API_AC_CA_LOCALITY',
                              config.get(SEC_CA, 'LOCALITY'))
-CA_ORGANIZATION = os.environ.get('TUTAMEN_API_AC_CA_ORGANIZATION',
-                                 config.get(SEC_CA, 'ORGANIZATION'))
+CA_ORG = os.environ.get('TUTAMEN_API_AC_CA_ORG',
+                                 config.get(SEC_CA, 'ORG'))
 CA_OU = os.environ.get('TUTAMEN_API_AC_CA_OU',
                        config.get(SEC_CA, 'OU'))
 CA_EMAIL = os.environ.get('TUTAMEN_API_AC_CA_EMAIL',
