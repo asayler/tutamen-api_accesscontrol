@@ -28,27 +28,33 @@ if __name__ == "__main__":
     pbackend = backends.RedisAtomicBackend(pdriver)
 
     # Setup Server
-    srv_ac = accesscontrol.AccessControlServer(pbackend,
-                                               create=True,
-                                               cn=config.CA_CN,
-                                               country=config.CA_COUNTRY,
-                                               state=config.CA_STATE,
-                                               locality=config.CA_LOCALITY,
-                                               organization=config.CA_ORGANIZATION,
-                                               ou=config.CA_OU,
-                                               email=config.CA_EMAIL)
+    try:
+        srv_ac = accesscontrol.AccessControlServer(pbackend, create=False)
+    except Exception as err:
 
-    # Save Cert
-    ca_crt_path = config.CA_CERT_PATH
-    with open(ca_crt_path, 'w') as f:
-        f.write(srv_ac.ca_crt)
+        # Setup New Server
+        srv_ac = accesscontrol.AccessControlServer(pbackend,
+                                                   create=True,
+                                                   cn=config.CA_CN,
+                                                   country=config.CA_COUNTRY,
+                                                   state=config.CA_STATE,
+                                                   locality=config.CA_LOCALITY,
+                                                   org=config.CA_ORG,
+                                                   ou=config.CA_OU,
+                                                   email=config.CA_EMAIL)
+
+        # Save Cert
+        ca_crt_path = config.CA_CERT_PATH
+        with open(ca_crt_path, 'w') as f:
+            f.write(srv_ac.ca_crt)
+
+    else:
+        print("AC Server Already Exist! Skipping...")
 
     # Set Default Server Permissions
     try:
         srv_ac.permissions.get(objtype=constants.TYPE_SRV_AC)
-    except  datatypes.ObjectDNE as err:
-        print("AC Server Permissions Already Exist! Skipping...: {}".format(err))
-    else:
+    except datatypes.ObjectDNE as err:
         v = srv_ac.verifiers.create(bypass_accounts=True)
         srv_ac.permissions.create(objtype=constants.TYPE_SRV_AC,
                                   v_create=[v],
@@ -56,12 +62,12 @@ if __name__ == "__main__":
                                   v_modify=[],
                                   v_delete=[],
                                   v_perms=[])
+    else:
+        print("AC Server Permissions Already Exist! Skipping...")
 
     try:
-        srv_ac.permissions.create(objtype=constants.TYPE_SRV_STORAGE)
+        srv_ac.permissions.get(objtype=constants.TYPE_SRV_STORAGE)
     except  datatypes.ObjectDNE as err:
-        print("Storage Server Permissions Already Exist! Skipping...: {}".format(err))
-    else:
         v = srv_ac.verifiers.create(bypass_accounts=True)
         srv_ac.permissions.create(objtype=constants.TYPE_SRV_STORAGE,
                                   v_create=[v],
@@ -69,3 +75,5 @@ if __name__ == "__main__":
                                   v_modify=[],
                                   v_delete=[],
                                   v_perms=[])
+    else:
+        print("Storage Server Permissions Already Exist! Skipping...")
