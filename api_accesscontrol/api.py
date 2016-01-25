@@ -404,13 +404,6 @@ def create_permissions():
     app.logger.debug("v_perms = '{}'".format(v_perms))
     app.logger.debug("v_default = '{}'".format(v_default))
 
-    # Check for default
-    if not v_default:
-        if v_create and v_read and v_modify and v_delete and v_perms:
-            pass
-        else:
-            raise exceptions.MissingDefaultVerifiers()
-
     # Create Permissions
     perms = flask.g.srv_ac.permissions.create(objuid=objuid,
                                               objtype=objtype,
