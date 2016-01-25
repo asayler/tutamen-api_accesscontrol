@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 
 # Andy Sayler
-# Copyright 2015
+# Copyright 2015, 2016
 
 
 ### Imports ###
 
 import functools
 import uuid
-import datetime
+from datetime import datetime
 
 import flask
 import flask.ext.cors
@@ -17,22 +17,16 @@ import flask.ext.cors
 from pcollections import drivers
 from pcollections import backends
 
+from pytutamen_server import constants
+from pytutamen_server import utility
 from pytutamen_server import datatypes
 from pytutamen_server import accesscontrol
-from pytutamen_server import constants
 
 from . import exceptions
 from . import config
 
 
 ### Constants ###
-
-DUR_ONE_MINUTE = datetime.timedelta(minutes=1)
-DUR_ONE_HOUR = datetime.timedelta(hours=1)
-DUR_ONE_DAY = datetime.timedelta(days=1)
-DUR_ONE_MONTH = datetime.timedelta(days=28)
-DUR_ONE_YEAR = datetime.timedelta(days=366)
-DUR_TEN_YEAR = datetime.timedelta(days=3660)
 
 _EP_PUBLIC = "public"
 _EP_BOOTSTRAP = "bootstrap"
@@ -104,44 +98,6 @@ def before_request():
 @app.teardown_request
 def teardown_request(exception):
     pass
-
-
-### Auth Decorators ###
-
-def authenticate_client():
-
-    def _decorator(func):
-
-        @functools.wraps(func)
-        def _wrapper(*args, **kwargs):
-
-            env = flask.request.environ
-            status = env.get('SSL_CLIENT_VERIFY', None)
-            if status != 'SUCCESS':
-                msg = "Could not verify client cert: {}".format(status)
-                app.logger.warning(msg)
-                raise exceptions.SSLClientCertError(msg)
-
-            accountuid = env.get('SSL_CLIENT_S_DN_OU', None)
-            clientuid = env.get('SSL_CLIENT_S_DN_CN', None)
-            try:
-                accountuid = uuid.UUID(accountuid) if accountuid else None
-                clientuid = uuid.UUID(clientuid) if clientuid else None
-            except ValueError as err:
-                msg = "Client cert contains bad uuid: {}".format(err)
-                app.logger.warning(msg)
-                raise exceptions.SSLClientCertError(msg) from err
-            msg = "Authenticated Client '{}' from Account '{}'".format(clientuid, accountuid)
-            app.logger.debug(msg)
-            flask.g.accountuid = accountuid
-            flask.g.clientuid = clientuid
-
-            # Call Function
-            return func(*args, **kwargs)
-
-        return _wrapper
-
-    return _decorator
 
 
 ### Endpoints ###
