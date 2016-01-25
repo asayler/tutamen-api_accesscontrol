@@ -21,6 +21,8 @@ SEC_CA = "ca"
 config.add_section(SEC_CA)
 SEC_BOOTSTRAP = "bootstrap"
 config.add_section(SEC_BOOTSTRAP)
+SEC_TOKENS = "tokens"
+config.add_section(SEC_TOKENS)
 
 # Filenames and Paths
 
@@ -56,6 +58,8 @@ config.set(SEC_CA, 'EMAIL', "admin@tutamen.net")
 config.set(SEC_CA, 'CERT_PATH', os.path.join(PROJ_DIR, "ca.crt"))
 
 config.set(SEC_BOOTSTRAP, 'PASSWORD', None)
+
+config.set(SEC_TOKENS, 'MINUTES', 5)
 
 # Read Config File
 
@@ -101,3 +105,6 @@ CA_CERT_PATH = os.environ.get('TUTAMEN_API_AC_CA_CERT_PATH',
 
 BOOTSTRAP_PASSWORD = os.environ.get('TUTAMEN_API_AC_BOOTSTRAP_PASSWORD',
                                     config.get(SEC_BOOTSTRAP, 'PASSWORD'))
+
+TOKENS_MINUTES = os.environ.get('TUTAMEN_API_AC_TOKENS_MINUTES',
+                                config.get(SEC_TOKENS, 'MINUTES'))

@@ -43,6 +43,8 @@ _KEY_AUTHORIZATIONS = "authorizations"
 _KEY_VERIFIERS = "verifiers"
 _KEY_PERMISSIONS = "permissions"
 
+_DEFAULT_TOKEN_DUR = config.TOKENS_MINUTES * constants.DUR_ONE_MINUTE
+
 
 ### Global Setup ###
 
@@ -220,9 +222,12 @@ def create_authorizations():
     userdata = json_in.get('userdata', {})
     objuid = json_in.get('objuid', None)
     objuid = uuid.UUID(objuid) if objuid else None
-
-    # Generate Server Attributes
-    expiration = datetime.datetime.utcnow() + DUR_ONE_HOUR
+    expiration = json_in.get('expiration', None)
+    expiration = int(expiration) if expiration else None
+    if expiration:
+        expiration = datetime.fromtimestamp(expiration)
+    else:
+        expiration = datetime.utcnow() + _DEFAULT_TOKEN_DURATION
 
     # Log Attributes
     app.logger.debug("objperm = '{}'".format(objperm))
