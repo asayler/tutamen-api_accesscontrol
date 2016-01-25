@@ -43,7 +43,7 @@ _KEY_AUTHORIZATIONS = "authorizations"
 _KEY_VERIFIERS = "verifiers"
 _KEY_PERMISSIONS = "permissions"
 
-_DEFAULT_TOKEN_DUR = config.TOKENS_MINUTES * constants.DUR_ONE_MINUTE
+_DEFAULT_TOKEN_DURATION = config.TOKENS_MINUTES * constants.DUR_ONE_MINUTE
 
 
 ### Global Setup ###
@@ -100,6 +100,44 @@ def before_request():
 @app.teardown_request
 def teardown_request(exception):
     pass
+
+
+### Auth Decorators ###
+
+def authenticate_client():
+
+    def _decorator(func):
+
+        @functools.wraps(func)
+        def _wrapper(*args, **kwargs):
+
+            env = flask.request.environ
+            status = env.get('SSL_CLIENT_VERIFY', None)
+            if status != 'SUCCESS':
+                msg = "Could not verify client cert: {}".format(status)
+                app.logger.warning(msg)
+                raise exceptions.SSLClientCertError(msg)
+
+            accountuid = env.get('SSL_CLIENT_S_DN_OU', None)
+            clientuid = env.get('SSL_CLIENT_S_DN_CN', None)
+            try:
+                accountuid = uuid.UUID(accountuid) if accountuid else None
+                clientuid = uuid.UUID(clientuid) if clientuid else None
+            except ValueError as err:
+                msg = "Client cert contains bad uuid: {}".format(err)
+                app.logger.warning(msg)
+                raise exceptions.SSLClientCertError(msg) from err
+            msg = "Authenticated Client '{}' from Account '{}'".format(clientuid, accountuid)
+            app.logger.debug(msg)
+            flask.g.accountuid = accountuid
+            flask.g.clientuid = clientuid
+
+            # Call Function
+            return func(*args, **kwargs)
+
+        return _wrapper
+
+    return _decorator
 
 
 ### Endpoints ###

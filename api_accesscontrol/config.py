@@ -59,7 +59,7 @@ config.set(SEC_CA, 'CERT_PATH', os.path.join(PROJ_DIR, "ca.crt"))
 
 config.set(SEC_BOOTSTRAP, 'PASSWORD', None)
 
-config.set(SEC_TOKENS, 'MINUTES', 5)
+config.set(SEC_TOKENS, 'MINUTES', "5")
 
 # Read Config File
 
@@ -106,5 +106,5 @@ CA_CERT_PATH = os.environ.get('TUTAMEN_API_AC_CA_CERT_PATH',
 BOOTSTRAP_PASSWORD = os.environ.get('TUTAMEN_API_AC_BOOTSTRAP_PASSWORD',
                                     config.get(SEC_BOOTSTRAP, 'PASSWORD'))
 
-TOKENS_MINUTES = os.environ.get('TUTAMEN_API_AC_TOKENS_MINUTES',
-                                config.get(SEC_TOKENS, 'MINUTES'))
+TOKENS_MINUTES = int(os.environ.get('TUTAMEN_API_AC_TOKENS_MINUTES',
+                                    config.get(SEC_TOKENS, 'MINUTES')))
