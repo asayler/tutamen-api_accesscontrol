@@ -36,6 +36,7 @@ DUR_TEN_YEAR = datetime.timedelta(days=3660)
 
 _EP_PUBLIC = "public"
 _EP_BOOTSTRAP = "bootstrap"
+_EP_TWILIO = "twilio"
 
 _KEY_CACERT = "cacert"
 _KEY_SIGKEY = "sigkey"
@@ -169,6 +170,18 @@ def get_pub_sigkey():
     app.logger.debug("GET PUB SIGKEY")
     json_out = {_KEY_SIGKEY: flask.g.srv_ac.sigkey_pub}
     return flask.jsonify(json_out)
+
+
+## Twilio Endpoints ##
+
+@app.route("/{}/".format(_EP_TWILIO), methods=['POST'])
+def post_twilio():
+
+    app.logger.debug("POST TWILIO")
+    msgdata = flask.request.values
+    app.logger.debug("msgdata = {}".format(msgdata))
+    xml_out = '<?xml version="1.0" encoding="UTF-8"?><Response></Response>'
+    return flask.Response(xml_out, mimetype='text/xml')
 
 
 ## Bootstrap Endpoints ##
