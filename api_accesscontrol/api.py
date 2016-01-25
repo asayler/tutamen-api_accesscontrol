@@ -12,7 +12,6 @@ import uuid
 import datetime
 
 import flask
-import flask.ext.httpauth
 import flask.ext.cors
 
 from pcollections import drivers
