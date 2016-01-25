@@ -139,6 +139,37 @@ def authenticate_client():
 
     return _decorator
 
+def get_tokens():
+
+    def _decorator(func):
+
+        @functools.wraps(func)
+        def _wrapper(*args, **kwargs):
+
+            tokens = flask.request.headers.get(_TOKENS_HEADER, "")
+
+            if not tokens:
+                msg = "Client sent blank or missing token header"
+                app.logger.warning(msg)
+                raise exceptions.TokensError(msg)
+
+            tokens = tokens.split(_TOKENS_DELIMINATOR)
+            app.logger.debug("tokens = {}".format(tokens))
+
+            if not tokens:
+                msg = "Client sent no parsable tokens"
+                app.logger.warning(msg)
+                raise exceptions.TokensError(msg)
+
+            flask.g.tokens = tokens
+
+            # Call Function
+            return func(*args, **kwargs)
+
+        return _wrapper
+
+    return _decorator
+
 
 ### Endpoints ###
 
