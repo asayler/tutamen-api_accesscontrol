@@ -227,6 +227,7 @@ def bootstrap_account_create():
 
     app.logger.debug("BOOTSTRAP ACCOUNT")
 
+    # Log JSON
     json_in = flask.request.get_json(force=True)
     app.logger.debug("json_in = '{}'".format(json_in))
 
@@ -284,6 +285,7 @@ def create_authorizations():
 
     app.logger.debug("POST AUTHORIZATIONS")
 
+    # Log JSON
     json_in = flask.request.get_json(force=True)
     app.logger.debug("json_in = '{}'".format(json_in))
 
@@ -380,10 +382,18 @@ def get_authorizations(authz_uid):
 
 @app.route("/{}/".format(_KEY_AUTHENTICATORS), methods=['POST'])
 @authenticate_client()
+@get_token()
 def create_authenticators():
 
     app.logger.debug("POST AUTHENTICATORS")
 
+    # Verify Tokens
+    objperm = constants.PERM_CREATE
+    objtype = constants.TYPE_SRV_AC
+    utility.verify_auth_token_sigkey(flask.g.token, flask.g.srv_ac.sigkey_pub,
+                                     objperm, objtype, error=True)
+
+    # Log JSON
     json_in = flask.request.get_json(force=True)
     app.logger.debug("json_in = '{}'".format(json_in))
 
@@ -451,6 +461,7 @@ def create_verifiers():
     utility.verify_auth_token_sigkey(flask.g.token, flask.g.srv_ac.sigkey_pub,
                                      objperm, objtype, error=True)
 
+    # Log JSON
     json_in = flask.request.get_json(force=True)
     app.logger.debug("json_in = '{}'".format(json_in))
 
@@ -499,9 +510,16 @@ def get_verifiers(verifiers_uid):
 
 @app.route("/{}/".format(_KEY_PERMISSIONS), methods=['POST'])
 @authenticate_client()
+@get_token()
 def create_permissions():
 
     app.logger.debug("POST PERMISSIONS")
+
+    # Verify Tokens
+    objperm = constants.PERM_CREATE
+    objtype = constants.TYPE_SRV_AC
+    utility.verify_auth_token_sigkey(flask.g.token, flask.g.srv_ac.sigkey_pub,
+                                     objperm, objtype, error=True)
 
     # Log JSON
     json_in = flask.request.get_json(force=True)
