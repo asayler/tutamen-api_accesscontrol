@@ -28,6 +28,9 @@ from . import config
 
 ### Constants ###
 
+_TOKENS_HEADER = 'tutamen-tokens'
+_TOKENS_DELIMINATOR = ':'
+
 _EP_PUBLIC = "public"
 _EP_BOOTSTRAP = "bootstrap"
 _EP_TWILIO = "twilio"
@@ -154,7 +157,7 @@ def get_token():
                 app.logger.warning(msg)
                 raise exceptions.TokensError(msg)
 
-            tokens = tokens.split(_TOKENS_DELIMINATOR)
+            tokens = header.split(_TOKENS_DELIMINATOR)
             app.logger.debug("tokens = {}".format(tokens))
 
             if not tokens:
@@ -445,7 +448,7 @@ def create_verifiers():
     # Verify Tokens
     objperm = constants.PERM_CREATE
     objtype = constants.TYPE_SRV_AC
-    utility.verify_auth_token_sigkey(flask.g.token, flask.g.srv_ss.sigkey_pub,
+    utility.verify_auth_token_sigkey(flask.g.token, flask.g.srv_ac.sigkey_pub,
                                      objperm, objtype, error=True)
 
     json_in = flask.request.get_json(force=True)
