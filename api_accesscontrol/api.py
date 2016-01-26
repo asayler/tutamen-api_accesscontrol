@@ -429,9 +429,18 @@ def create_authenticators():
 
 @app.route("/{}/<authenticators_uid>/".format(_KEY_AUTHENTICATORS), methods=['GET'])
 @authenticate_client()
+@get_token()
 def get_authenticators(authenticators_uid):
 
     app.logger.debug("GET AUTHENTICATORS")
+
+    # Verify Tokens
+    objperm = constants.PERM_READ
+    objtype = constants.TYPE_AUTHENTICATOR
+    objuid = uuid.UUID(authenticators_uid)
+    utility.verify_auth_token_sigkey(flask.g.token, flask.g.srv_ac.sigkey_pub,
+                                     objperm, objtype, objuid=objuid,
+                                     error=True)
 
     # Get Authenticator
     authenticator = flask.g.srv_ac.authenticators.get(key=authenticators_uid)
@@ -490,9 +499,18 @@ def create_verifiers():
 
 @app.route("/{}/<verifiers_uid>/".format(_KEY_VERIFIERS), methods=['GET'])
 @authenticate_client()
+@get_token()
 def get_verifiers(verifiers_uid):
 
     app.logger.debug("GET VERIFIERS")
+
+    # Verify Tokens
+    objperm = constants.PERM_READ
+    objtype = constants.TYPE_VERIFIER
+    objuid = uuid.UUID(verifiers_uid)
+    utility.verify_auth_token_sigkey(flask.g.token, flask.g.srv_ac.sigkey_pub,
+                                     objperm, objtype, objuid=objuid,
+                                     error=True)
 
     # Get Verifier
     verifier = flask.g.srv_ac.verifiers.get(key=verifiers_uid)
@@ -588,6 +606,7 @@ def create_permissions():
 
 @app.route("/{}/<objtype>/<objuid>/".format(_KEY_PERMISSIONS), methods=['GET'])
 @authenticate_client()
+@get_token()
 def get_permissions(objtype, objuid):
 
     app.logger.debug("GET PERMISSIONS")
@@ -599,6 +618,12 @@ def get_permissions(objtype, objuid):
         objuid = uuid.UUID(objuid)
     else:
         raise exceptions.UnknownObjType(objtype)
+
+    # Verify Tokens
+    objperm = constants.PERM_PERMS
+    utility.verify_auth_token_sigkey(flask.g.token, flask.g.srv_ac.sigkey_pub,
+                                     objperm, objtype, objuid=objuid,
+                                     error=True)
 
     # Get Permissions
     perms = flask.g.srv_ac.permissions.get(objtype=objtype, objuid=objuid)
