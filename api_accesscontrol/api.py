@@ -140,16 +140,16 @@ def authenticate_client():
 
     return _decorator
 
-def get_tokens():
+def get_token():
 
     def _decorator(func):
 
         @functools.wraps(func)
         def _wrapper(*args, **kwargs):
 
-            tokens = flask.request.headers.get(_TOKENS_HEADER, "")
+            header = flask.request.headers.get(_TOKENS_HEADER, "")
 
-            if not tokens:
+            if not header:
                 msg = "Client sent blank or missing token header"
                 app.logger.warning(msg)
                 raise exceptions.TokensError(msg)
@@ -162,7 +162,12 @@ def get_tokens():
                 app.logger.warning(msg)
                 raise exceptions.TokensError(msg)
 
-            flask.g.tokens = tokens
+            if len(tokens) > 1:
+                msg = "Client sent too many tokens"
+                app.logger.warning(msg)
+                raise exceptions.TokensError(msg)
+
+            flask.g.token = tokens[0]
 
             # Call Function
             return func(*args, **kwargs)
@@ -432,9 +437,16 @@ def get_authenticators(authenticators_uid):
 
 @app.route("/{}/".format(_KEY_VERIFIERS), methods=['POST'])
 @authenticate_client()
+@get_token()
 def create_verifiers():
 
     app.logger.debug("POST VERIFIERS")
+
+    # Verify Tokens
+    objperm = constants.PERM_CREATE
+    objtype = constants.TYPE_SRV_AC
+    utility.verify_auth_token_sigkey(flask.g.token, flask.g.srv_ss.sigkey_pub,
+                                     objperm, objtype, error=True)
 
     json_in = flask.request.get_json(force=True)
     app.logger.debug("json_in = '{}'".format(json_in))
@@ -637,6 +649,24 @@ def bad_cert(error):
     err = { 'status': 401,
             'message': "{}".format(error) }
     app.logger.info("Client Error: SSLClientCertError: {}".format(err))
+    res = flask.jsonify(err)
+    res.status_code = err['status']
+    return res
+
+@app.errorhandler(exceptions.TokensError)
+def bad_tokens(error):
+    err = { 'status': 401,
+            'message': "{}".format(error) }
+    app.logger.info("Client Error: TokensError: {}".format(err))
+    res = flask.jsonify(err)
+    res.status_code = err['status']
+    return res
+
+@app.errorhandler(utility.TokenVerificationFailed)
+def failed_tokens(error):
+    err = { 'status': 401,
+            'message': "{}".format(error) }
+    app.logger.info("Client Error: TokenVerificationFailed: {}".format(err))
     res = flask.jsonify(err)
     res.status_code = err['status']
     return res
