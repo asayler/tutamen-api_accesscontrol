@@ -40,6 +40,7 @@ _KEY_CLIENTS = "clients"
 _KEY_CLIENTS_CERTS = "{}_certs".format(_KEY_CLIENTS)
 
 _KEY_AUTHORIZATIONS = "authorizations"
+_KEY_AUTHENTICATORS = "authenticators"
 _KEY_VERIFIERS = "verifiers"
 _KEY_PERMISSIONS = "permissions"
 
@@ -364,6 +365,66 @@ def get_authorizations(authz_uid):
     log_out = dict(json_out)
     log_out['token'] = "REDACTED" if log_out['token'] else log_out['token']
     app.logger.debug("json_out = '{}'".format(log_out))
+    return flask.jsonify(json_out)
+
+
+## Authenticator Endpoints ##
+
+@app.route("/{}/".format(_KEY_AUTHENTICATORS), methods=['POST'])
+@authenticate_client()
+def create_authenticators():
+
+    app.logger.debug("POST AUTHENTICATORS")
+
+    json_in = flask.request.get_json(force=True)
+    app.logger.debug("json_in = '{}'".format(json_in))
+
+    # Get Required Attributes
+    try:
+        module_name = json_in['module_name']
+    except KeyError as err:
+        msg = "Missing required parameter: {}".format(err)
+        app.logger.warning(msg)
+        raise exceptions.MissingAttributeError(msg) from err
+
+    # Get Optional Attributes
+    uid = json_in.get('uid', None)
+    module_kwargs = json_in.get('module_kwargs', {})
+    userdata = json_in.get('userdata', {})
+
+    # Log Attributes
+    app.logger.debug("uid = '{}'".format(uid))
+    app.logger.debug("module_name = '{}'".format(module_name))
+    app.logger.debug("module_kwargs = '{}'".format(module_kwargs))
+    app.logger.debug("userdata = '{}'".format(userdata))
+
+    # Create Authenticator
+    authenticator = flask.g.srv_ac.authenticators.create(key=uid, userdata=userdata,
+                                                         module_name=module_name,
+                                                         module_kwargs=module_kwargs)
+    app.logger.debug("authenticator = '{}'".format(authenticator))
+
+    # Return Response
+    json_out = {_KEY_AUTHENTICATORS: [authenticator.key]}
+    app.logger.debug("json_out = '{}'".format(json_out))
+    return flask.jsonify(json_out)
+
+@app.route("/{}/<authenticators_uid>/".format(_KEY_AUTHENTICATORS), methods=['GET'])
+@authenticate_client()
+def get_authenticators(authenticators_uid):
+
+    app.logger.debug("GET AUTHENTICATORS")
+
+    # Get Authenticator
+    authenticator = flask.g.srv_ac.authenticators.get(key=authenticators_uid)
+    app.logger.debug("authenticator = '{}'".format(authenticator))
+
+    # Return Response
+    json_out = {'uid': authenticator.key,
+                'module_name': list(authenticator.module_name),
+                'module_kwargs': list(authenticator.module_kwargs)}
+                'userdata': list(authenticator.userdata)}
+    app.logger.debug("json_out = '{}'".format(json_out))
     return flask.jsonify(json_out)
 
 
