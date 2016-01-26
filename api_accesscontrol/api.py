@@ -422,7 +422,7 @@ def get_authenticators(authenticators_uid):
     # Return Response
     json_out = {'uid': authenticator.key,
                 'module_name': list(authenticator.module_name),
-                'module_kwargs': list(authenticator.module_kwargs)}
+                'module_kwargs': list(authenticator.module_kwargs),
                 'userdata': list(authenticator.userdata)}
     app.logger.debug("json_out = '{}'".format(json_out))
     return flask.jsonify(json_out)
