@@ -1,3 +1,3 @@
 [submodule "submodules/tutamen-pytutamen_server"]
 	path = submodules/tutamen-pytutamen_server
-	url = git@github.com:asayler/tutamen-pytutamen_server.git
+	url = https://github.com/asayler/tutamen-pytutamen_server.git
